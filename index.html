@@ -1790,6 +1790,7 @@ let _allProxiesFailed = false;
 async function fetchWithFallback(url) {
   const enc = encodeURIComponent(url);
   const proxies = [
+    'https://espn-cors-proxy.federicoalvarenga.workers.dev/?url=' + enc,
     'https://corsproxy.io/?' + enc,
     'https://api.allorigins.win/raw?url=' + enc,
     'https://cors.sh/' + url,
