@@ -1040,7 +1040,7 @@ function simulateAlarmById(id) {
   fireAlarm(alarm.type, msgs[0], msgs[1], alarm.sport);
 }
 
-function fireAlarm(type, title, message, sport) {
+function fireAlarm(type, title, message, sport, alarmId) {
   const tmeta = ALARM_TYPE_META[type];
 
   // 1. Sound
@@ -1062,6 +1062,14 @@ function fireAlarm(type, title, message, sport) {
 
   // 4. Log to history
   addToHistory(type, title, message, sport);
+
+  // 5. Remove the alarm that fired (if we know which one it is)
+  if (alarmId) {
+    alarms = alarms.filter(a => a.id !== alarmId);
+    saveAlarms();
+    renderAlarmList();
+    updateAlarmCount();
+  }
 }
 
 /* ============================================================
@@ -2192,7 +2200,7 @@ function checkAlarmForGame(alarm, game) {
           fireAlarm('gamestart',
             SPORT_META[alarm.sport].icon + ' Game Started!',
             game.awayName + ' vs ' + game.homeName + ' is now live.',
-            alarm.sport);
+            alarm.sport, alarm.id);
         }
       }
       if (game.isFinal) {
@@ -2203,7 +2211,7 @@ function checkAlarmForGame(alarm, game) {
           fireAlarm('gamestart',
             '🏁 Final Whistle!',
             game.awayName + ' ' + game.awayScore + ' — ' + game.homeScore + ' ' + game.homeName + '. ' + winner + ' wins!',
-            alarm.sport);
+            alarm.sport, alarm.id);
         }
       }
       break;
@@ -2230,7 +2238,7 @@ function checkAlarmForGame(alarm, game) {
         fireAlarm('period',
           '⏱️ ' + label + ' Starting!',
           (game.awayName + ' vs ' + game.homeName) + ' · ' + alarm.sport + ' · ' + label,
-          alarm.sport);
+          alarm.sport, alarm.id);
       }
       break;
     }
@@ -2251,7 +2259,7 @@ function checkAlarmForGame(alarm, game) {
             fireAlarm('score',
               '🎯 Score Alert!',
               name + ' has reached ' + score + ' points in ' + game.awayName + ' vs ' + game.homeName,
-              alarm.sport);
+              alarm.sport, alarm.id);
           }
         }
       });
@@ -2275,7 +2283,7 @@ function checkAlarmForGame(alarm, game) {
         fireAlarm('team',
           '📣 ' + teamName + ' Scores!',
           teamName + ' now has ' + teamScore + ' points in ' + game.awayName + ' vs ' + game.homeName,
-          alarm.sport);
+          alarm.sport, alarm.id);
       }
       break;
     }
@@ -2291,7 +2299,7 @@ function checkAlarmForGame(alarm, game) {
           fireAlarm('ot',
             '⚡ Overtime!',
             game.awayName + ' vs ' + game.homeName + ' is going to overtime!',
-            alarm.sport);
+            alarm.sport, alarm.id);
         }
       }
       break;
