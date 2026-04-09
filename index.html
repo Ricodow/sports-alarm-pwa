@@ -2719,7 +2719,12 @@ async function loadSetupGames(manual) {
   const last  = sgpState.lastFetch[sport] || 0;
 
   // Throttle: tight during live games, relaxed otherwise
-  if (!manual && (now - last) < (_hasLiveGames() ? 25000 : 240000)) { renderSetupGames(); return; }
+  if (!manual && (now - last) < (_hasLiveGames() ? 25000 : 240000)) {
+    document.getElementById('sgpLiveList').innerHTML     = '';
+    document.getElementById('sgpUpcomingList').innerHTML = '';
+    renderSetupGames();
+    return;
+  }
 
   sgpState.loading = true;
   setSgpStatusLoading();
