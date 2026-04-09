@@ -1428,9 +1428,15 @@ async function fetchAllGames(manual = false) {
     const data = await apiFetch('/api/games');
 
     // Server returns flat { games: [...] } — split by status flags
-    const allGames = data.games || [];
-    gamesData.live     = allGames.filter(g => g.isLive).map(enrichGame);
-    gamesData.upcoming = allGames.filter(g => g.isUpcoming && !g.isLive && !g.isFinal).map(enrichGame)
+    const allGames = (data.games || []).map(g => ({
+      ...g,
+      periodText: g.periodText || g.statusDesc || '',
+      scheduledLocal: g.scheduledLocal || (g.startTime ? new Date(g.startTime).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''),
+      icon: g.icon || SPORT_ICONS[g.sport?.toUpperCase()] || '🏆',
+      sport: g.sport?.toUpperCase() || g.sport
+    }));
+    gamesData.live     = allGames.filter(g => g.isLive);
+    gamesData.upcoming = allGames.filter(g => g.isUpcoming && !g.isLive && !g.isFinal)
                            .sort((a, b) => (new Date(a.startTime||0)) - (new Date(b.startTime||0)));
     gamesData.final    = allGames.filter(g => g.isFinal).map(enrichGame);
 
