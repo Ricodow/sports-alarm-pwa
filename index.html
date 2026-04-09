@@ -96,24 +96,6 @@ body {
   font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--text2); margin-bottom: 10px;
 }
-.sports-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-  margin-bottom: 20px;
-}
-.sport-chip {
-  background: var(--bg2); border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm); padding: 10px 4px;
-  text-align: center; cursor: pointer; transition: all 0.2s;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-}
-.sport-chip:hover { border-color: var(--accent); }
-.sport-chip.active {
-  border-color: var(--accent); background: rgba(0,212,255,0.08);
-  box-shadow: 0 0 12px rgba(0,212,255,0.2);
-}
-.sport-chip .sport-icon { font-size: 1.5rem; line-height: 1; }
-.sport-chip .sport-name { font-size: 0.6rem; font-weight: 700; color: var(--text2); letter-spacing: 0.05em; }
-.sport-chip.active .sport-name { color: var(--accent); }
 
 /* ============================================================
    ALARM CONFIG CARD
@@ -592,178 +574,6 @@ body {
 
 
 /* ============================================================
-   SETUP TAB — INLINE GAME PICKER
-   ============================================================ */
-
-#setup-game-picker {
-  margin-bottom: 20px;
-  animation: slideIn 0.28s ease;
-}
-.sgp-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px;
-}
-.sgp-title {
-  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--text2);
-}
-.sgp-subtabs {
-  display: flex; gap: 0;
-  background: var(--bg3); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 3px;
-  margin-bottom: 12px;
-}
-.sgp-subtab {
-  flex: 1; padding: 7px 6px; background: none; border: none;
-  color: var(--text2); font-size: 0.75rem; font-weight: 700;
-  border-radius: 6px; cursor: pointer; transition: all 0.18s;
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  white-space: nowrap;
-}
-.sgp-subtab.active {
-  background: var(--bg2); color: var(--accent);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-.sgp-subtab .sgp-live-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--red); flex-shrink: 0;
-  animation: livePulse 1.2s infinite;
-}
-.sgp-list {
-  display: flex; flex-direction: column; gap: 8px;
-}
-.sgp-card {
-  background: var(--bg2); border: 1.5px solid var(--border);
-  border-radius: var(--radius); padding: 12px 14px;
-  cursor: pointer; transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
-  position: relative;
-}
-.sgp-card:hover {
-  border-color: rgba(0,212,255,0.4);
-  background: rgba(0,212,255,0.04);
-}
-.sgp-card.selected {
-  border-color: var(--accent);
-  background: rgba(0,212,255,0.09);
-  box-shadow: 0 0 14px rgba(0,212,255,0.18);
-}
-.sgp-card.live-card { border-color: rgba(255,61,87,0.3); }
-.sgp-card.live-card:hover { border-color: rgba(255,61,87,0.55); }
-.sgp-card.live-card.selected {
-  border-color: var(--accent);
-  background: rgba(0,212,255,0.09);
-  box-shadow: 0 0 14px rgba(0,212,255,0.18);
-}
-.sgp-card-top {
-  display: flex; align-items: center; gap: 12px;
-}
-.sgp-card-icon {
-  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-  background: rgba(0,212,255,0.08); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
-}
-.sgp-card-body { flex: 1; min-width: 0; }
-.sgp-card-matchup {
-  font-size: 0.85rem; font-weight: 700;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  margin-bottom: 2px;
-}
-.sgp-card-meta { font-size: 0.69rem; color: var(--text2); }
-/* Inline score block (live) */
-.sgp-card-score { flex-shrink: 0; text-align: right; }
-.sgp-score-line {
-  display: flex; align-items: center; justify-content: flex-end; gap: 5px;
-}
-.sgp-score-abbr {
-  font-size: 0.68rem; color: var(--text2); font-weight: 600; min-width: 24px;
-}
-.sgp-score-pts {
-  font-size: 0.95rem; font-weight: 800; color: var(--accent); min-width: 20px;
-}
-.sgp-score-pts.leading { color: var(--green); }
-.sgp-card-time { flex-shrink: 0; text-align: right; }
-.sgp-time-period {
-  font-size: 0.6rem; font-weight: 700; color: var(--text2); text-transform: uppercase;
-}
-.sgp-time-clock {
-  font-size: 0.8rem; font-weight: 800; color: var(--yellow); margin-top: 1px;
-}
-.sgp-time-sched { font-size: 0.7rem; color: var(--text2); }
-/* Checkmark overlay on selected card */
-.sgp-check {
-  position: absolute; top: 8px; right: 10px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--accent); color: #000;
-  font-size: 0.6rem; font-weight: 900;
-  display: none; align-items: center; justify-content: center;
-}
-.sgp-card.selected .sgp-check { display: flex; }
-/* Select button */
-.sgp-select-btn {
-  margin-top: 9px; width: 100%; padding: 7px;
-  background: rgba(0,212,255,0.08); border: 1.5px solid rgba(0,212,255,0.3);
-  color: var(--accent); font-size: 0.74rem; font-weight: 700;
-  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.18s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.sgp-select-btn:hover { background: rgba(0,212,255,0.16); border-color: var(--accent); }
-.sgp-card.selected .sgp-select-btn {
-  background: var(--accent); color: #000; border-color: var(--accent);
-}
-/* Spinner */
-.sgp-spinner {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; padding: 28px 16px; gap: 10px;
-  color: var(--text2); font-size: 0.82rem;
-}
-.sgp-spinner .spinner-ring { width: 28px; height: 28px; }
-/* Empty / error */
-.sgp-empty {
-  text-align: center; padding: 20px 14px;
-  color: var(--text2); font-size: 0.82rem;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-.sgp-empty .sgp-empty-icon { font-size: 1.8rem; margin-bottom: 6px; }
-.sgp-error {
-  text-align: center; padding: 14px;
-  color: var(--red); font-size: 0.78rem;
-  background: rgba(255,61,87,0.06); border: 1px solid rgba(255,61,87,0.25);
-  border-radius: var(--radius);
-}
-/* Selected-game context banner above alarm config */
-#setup-selected-ctx {
-  background: var(--bg3); border: 1.5px solid rgba(0,212,255,0.35);
-  border-radius: var(--radius-sm); padding: 10px 14px;
-  margin-bottom: 16px;
-  display: none; align-items: center; gap: 10px;
-  animation: slideIn 0.25s ease;
-}
-#setup-selected-ctx .sctx-icon { font-size: 1.35rem; flex-shrink: 0; }
-#setup-selected-ctx .sctx-body { flex: 1; min-width: 0; }
-#setup-selected-ctx .sctx-teams {
-  font-size: 0.85rem; font-weight: 700;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-#setup-selected-ctx .sctx-meta {
-  font-size: 0.69rem; color: var(--text2); margin-top: 1px;
-}
-#setup-selected-ctx .sctx-clear {
-  background: none; border: 1px solid var(--border); color: var(--text2);
-  font-size: 0.68rem; padding: 4px 8px; border-radius: var(--radius-sm);
-  cursor: pointer; white-space: nowrap; transition: all 0.18s; flex-shrink: 0;
-}
-#setup-selected-ctx .sctx-clear:hover { border-color: var(--red); color: var(--red); }
-/* Skip link */
-.sgp-skip { text-align: center; padding: 10px 0 2px; }
-.sgp-skip-btn {
-  background: none; border: none; color: var(--text2); font-size: 0.74rem;
-  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
-  transition: color 0.18s;
-}
-.sgp-skip-btn:hover { color: var(--text); }
-
-/* ============================================================
    PERIOD PICKER MODAL / BOTTOM SHEET
    ============================================================ */
 .modal-overlay {
@@ -1002,34 +812,6 @@ body {
   <!-- ==================== SETUP TAB ==================== -->
   <div class="tab-panel active" id="tab-setup">
     <!-- Selected-game context banner (above alarm config) -->
-    <div id="setup-selected-ctx">
-      <div class="sctx-icon" id="sctxIcon">&#127944;</div>
-      <div class="sctx-body">
-        <div class="sctx-teams" id="sctxTeams"></div>
-        <div class="sctx-meta" id="sctxMeta"></div>
-      </div>
-      <button class="sctx-clear" onclick="clearSetupGame()">&#10005; Clear</button>
-    </div>
-
-    <!-- ══ Setup Game Picker ══ -->
-    <div id="setup-game-picker" style="display:none">
-      <div class="sgp-header">
-        <div class="sgp-title" id="sgpSportLabel"></div>
-        <button id="sgpRefreshBtn" onclick="loadSetupGames(true)" title="Refresh games" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem;padding:4px 6px;border-radius:6px;transition:color 0.18s;">&#8635;</button>
-      </div>
-      <div class="sgp-subtabs">
-        <button class="sgp-subtab active" id="sgpTabLive" onclick="switchSgpTab('live')">
-          <span class="sgp-live-dot"></span> Live
-        </button>
-        <button class="sgp-subtab" id="sgpTabUpcoming" onclick="switchSgpTab('upcoming')">
-          &#128197; Upcoming
-        </button>
-      </div>
-      <div class="sgp-list" id="sgpLiveList" style="display:flex"></div>
-      <div class="sgp-list" id="sgpUpcomingList" style="display:none"></div>
-      <div id="sgp-status-bar" style="display:none;font-size:0.72rem;margin-top:8px;padding:4px 2px;"></div>
-    </div>
-
     <div class="section-label">Configure Alarms</div>
 
     <!-- Game Start/End -->
@@ -1302,10 +1084,6 @@ function init() {
     deferredInstallPrompt = null;
   });
 
-  // Show the game picker for the default sport (NFL) on load
-  showSetupGamePicker(currentSport);
-  loadSetupGames(false);
-
   // Start background game polling immediately (not just when Games tab opens)
   // This keeps alarm checking working even if user never visits Games tab
   fetchAllGames(true);
@@ -1338,8 +1116,6 @@ function switchTab(name) {
     else { renderGames(); if (gamesLastUpdated) startLastUpdatedTicker(); }
     startGamesAutoRefresh();
   } else if (name === 'setup') {
-    // Keep polling alive while on Setup so game picker stays fresh
-    // (setup uses sgpState, not gamesData, so just keep a shared timer)
     stopGamesAutoRefresh();
     startGamesAutoRefresh();
   } else {
@@ -1349,26 +1125,6 @@ function switchTab(name) {
   }
 }
 
-/* ============================================================
-   SPORT SELECTION
-   ============================================================ */
-function selectSport(el) {
-  document.querySelectorAll('.sport-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  currentSport = el.dataset.sport;
-  const meta = SPORT_META[currentSport];
-  document.getElementById('periodLabel').textContent = meta.periodLabel;
-  document.getElementById('periodDesc').textContent = meta.periodDesc;
-
-  // Reset any previously selected game and reload picker for the new sport
-  sgpState.selectedGame = null;
-  document.getElementById('setup-selected-ctx').style.display = 'none';
-  const teamInput = document.getElementById('teamName');
-  if (teamInput) teamInput.value = '';
-  // showSetupGamePicker renders cached data immediately; loadSetupGames fetches fresh data if needed
-  showSetupGamePicker(currentSport);
-  loadSetupGames(false); // throttled — no-ops if fetched recently, fetches otherwise
-}
 
 /* ============================================================
    ADD ALARMS
@@ -1423,10 +1179,7 @@ function addAllActiveAlarms() {
     injury:    'toggle-injury',
     ot:        'toggle-ot'
   };
-  // Use the selected game matchup label if a game was chosen in the picker
-  const _sgpLabel = (sgpState && sgpState.selectedGame)
-    ? (sgpState.selectedGame.awayName + ' vs ' + sgpState.selectedGame.homeName)
-    : null;
+  const _sgpLabel = null;
   let count = 0;
   Object.entries(toggles).forEach(([type, toggleId]) => {
     if (!document.getElementById(toggleId).checked) return;
@@ -2672,17 +2425,12 @@ function prefillAlarmFromGame(game) {
   const sportMap = { MLS: 'MLS', NCAAF: 'NCAAF', NCAAB: 'NCAAB' };
   const targetSport = sportMap[game.sport] || game.sport;
 
-  // Also sync the currentSport and the Setup tab chip (for non-modal path)
-  const chip = document.querySelector(`.sport-chip[data-sport="${targetSport}"]`);
-  if (chip) {
-    document.querySelectorAll('.sport-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    currentSport = targetSport;
-    const meta = SPORT_META[currentSport];
-    if (meta) {
-      document.getElementById('periodLabel').textContent = meta.periodLabel;
-      document.getElementById('periodDesc').textContent  = meta.periodDesc;
-    }
+  // Sync currentSport and update period labels
+  currentSport = targetSport;
+  const meta = SPORT_META[currentSport];
+  if (meta) {
+    document.getElementById('periodLabel').textContent = meta.periodLabel;
+    document.getElementById('periodDesc').textContent  = meta.periodDesc;
   }
 
   // Pre-fill team input (legacy path)
@@ -2698,322 +2446,9 @@ function prefillAlarmFromGame(game) {
    SETUP TAB "Set Game Alarm" button — opens modal from Setup tab
    ============================================================ */
 function openSetupAlarmModal() {
-  openPeriodModal(currentSport, sgpState.selectedGame || null);
+  openPeriodModal(currentSport, null);
 }
 
-
-/* ============================================================
-   SETUP TAB — INLINE GAME PICKER
-   ============================================================ */
-
-// SGP sport key → VPS route (Soccer maps to 'soccer' route)
-// Reuses VPS_SPORT_ROUTE defined above.
-
-let sgpState = {
-  sport:        'NFL',
-  activeTab:    'live',    // 'live' | 'upcoming'
-  live:         [],
-  upcoming:     [],
-  selectedGame: null,      // normalized game object or null
-  loading:      false,
-  lastFetch:    {},        // { sport: timestamp }
-  fetchAbort:   null,
-  cache:        {}         // { sport: { live: [], upcoming: [] } } — per-sport data cache
-};
-
-/* ── Show / hide the picker when sport changes ── */
-function showSetupGamePicker(sport) {
-  sgpState.sport = sport;
-  sgpState.activeTab = 'live';
-
-  // Restore cached data for this sport if available — never reset to empty on sport switch
-  if (sgpState.cache[sport]) {
-    sgpState.live     = sgpState.cache[sport].live;
-    sgpState.upcoming = sgpState.cache[sport].upcoming;
-  } else {
-    sgpState.live     = [];
-    sgpState.upcoming = [];
-  }
-  // Don't auto-clear selected game when switching sports — clearSetupGame() does that explicitly
-
-  const picker = document.getElementById('setup-game-picker');
-  picker.style.display = 'block';
-
-  // Sport label in header
-  const sportIcon = (SPORT_META[sport] && SPORT_META[sport].icon) || '';
-  document.getElementById('sgpSportLabel').textContent = sportIcon + ' ' + sport;
-
-  // Reset sub-tab UI without triggering a fetch
-  sgpState.activeTab = 'live';
-  document.getElementById('sgpTabLive').classList.add('active');
-  document.getElementById('sgpTabUpcoming').classList.remove('active');
-  document.getElementById('sgpLiveList').style.display     = 'flex';
-  document.getElementById('sgpUpcomingList').style.display = 'none';
-
-  // Render whatever data we have (from cache or empty)
-  renderSetupGames();
-}
-
-function hideSetupGamePicker() {
-  document.getElementById('setup-game-picker').style.display = 'none';
-}
-
-/* ── Sub-tab switcher ── */
-function switchSgpTab(tab) {
-  sgpState.activeTab = tab;
-  document.getElementById('sgpTabLive').classList.toggle('active', tab === 'live');
-  document.getElementById('sgpTabUpcoming').classList.toggle('active', tab === 'upcoming');
-  document.getElementById('sgpLiveList').style.display     = tab === 'live'     ? 'flex' : 'none';
-  document.getElementById('sgpUpcomingList').style.display = tab === 'upcoming' ? 'flex' : 'none';
-  renderSetupGames();
-}
-
-/* ── Fetch games for the current sport ── */
-async function loadSetupGames(manual) {
-  const sport = sgpState.sport;
-  const now   = Date.now();
-  const last  = sgpState.lastFetch[sport] || 0;
-
-  // Throttle: tight during live games, relaxed otherwise
-  if (!manual && (now - last) < (_hasLiveGames() ? 25000 : 240000)) {
-    renderSetupGames();
-    return;
-  }
-
-  sgpState.loading = true;
-  setSgpStatusLoading();
-
-  // Re-render now so spinner shows (renderSgpList checks sgpState.loading)
-  renderSetupGames();
-
-  // Spinning refresh button
-  const btn = document.getElementById('sgpRefreshBtn');
-  if (btn) btn.classList.add('spinning');
-
-  const route = VPS_SPORT_ROUTE[sport];
-  if (!route) {
-    sgpState.live = []; sgpState.upcoming = [];
-    renderSetupGames();
-    sgpState.loading = false;
-    if (btn) btn.classList.remove('spinning');
-    updateSgpStatus(sport, [], []);
-    return;
-  }
-
-  try {
-    // Try fresh cache first; fall back to VPS fetch
-    let rawData = _readCache(sport);
-    if (!rawData) {
-      rawData = await apiFetch('/api/' + route + '/games?date=today');
-      _writeCache(sport, rawData);
-    }
-
-    const all = (rawData.games || [])
-      .map(g => parseClearSportsGame(g, sport))
-      .filter(Boolean);
-
-    sgpState.live     = all.filter(g => g.isLive);
-    sgpState.upcoming = all.filter(g => g.isUpcoming).sort((a, b) => a.scheduledRaw - b.scheduledRaw);
-    sgpState.lastFetch[sport] = Date.now();
-    // Save into per-sport cache so switching back restores data instantly
-    sgpState.cache[sport] = { live: sgpState.live, upcoming: sgpState.upcoming };
-    updateSgpStatus(sport, sgpState.live, sgpState.upcoming);
-  } catch(e) {
-    sgpState.live = null; // null = error state
-    sgpState.upcoming = null;
-    updateSgpStatus(sport, null, null);
-  } finally {
-    sgpState.loading = false;
-    if (btn) btn.classList.remove('spinning');
-    renderSetupGames();
-  }
-}
-
-/* ── Render live + upcoming lists ── */
-function renderSetupGames() {
-  renderSgpList('live',     document.getElementById('sgpLiveList'));
-  renderSgpList('upcoming', document.getElementById('sgpUpcomingList'));
-}
-
-function renderSgpList(tab, container) {
-  if (!container) return;
-  const games = sgpState[tab]; // null = error, [] = empty, [...] = has games
-
-  // Still loading — show spinner
-  if (sgpState.loading && (games === null || games.length === 0)) {
-    container.innerHTML = '<div class="sgp-spinner"><div class="spinner-ring"></div><span>Loading games\u2026</span></div>';
-    return;
-  }
-
-  if (games === null) {
-    container.innerHTML = '<div class="sgp-error">&#9888;&#65039; Could not load games. Check your connection and <button onclick="loadSetupGames(true)" style="background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;font-size:inherit;padding:0;">Retry</button></div>';
-    return;
-  }
-
-  if (games.length === 0) {
-    const icon  = tab === 'live' ? '&#128250;' : '&#128197;';
-    const label = tab === 'live' ? 'No live games right now.' : 'No upcoming games found.';
-    container.innerHTML = `<div class="sgp-empty"><div class="sgp-empty-icon">${icon}</div><div>${label}</div></div>`;
-    return;
-  }
-
-  const sorted = tab === 'upcoming'
-    ? [...games].sort((a, b) => new Date(a.scheduledRaw || 0) - new Date(b.scheduledRaw || 0))
-    : games;
-
-  container.innerHTML = sorted
-    .map(g => buildSgpCard(g))
-    .join('');
-}
-
-/* ── Update the status bar under the sport picker ── */
-function updateSgpStatus(sport, live, upcoming) {
-  const bar = document.getElementById('sgp-status-bar');
-  if (!bar) return;
-  bar.style.display = 'block';
-  if (live === null) {
-    // error
-    bar.innerHTML = '<span style="color:var(--red)">&#9888; Could not reach server. <button onclick="loadSetupGames(true)" style="background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;font-size:inherit;padding:0;">Retry</button></span>';
-  } else {
-    const liveCount     = (live || []).length;
-    const upcomingCount = (upcoming || []).length;
-    if (liveCount === 0 && upcomingCount === 0) {
-      bar.innerHTML = '<span style="color:var(--text2)">No games scheduled right now.</span>';
-    } else {
-      const parts = [];
-      if (liveCount > 0)     parts.push('<span style="color:var(--red);font-weight:700">' + liveCount + ' live</span>');
-      if (upcomingCount > 0) parts.push('<span style="color:var(--accent)">' + upcomingCount + ' upcoming</span>');
-      bar.innerHTML = parts.join(', ');
-    }
-  }
-}
-
-/* Show "Fetching..." in status bar while loading */
-function setSgpStatusLoading() {
-  const bar = document.getElementById('sgp-status-bar');
-  if (!bar) return;
-  bar.style.display = 'block';
-  bar.innerHTML = '<span style="color:var(--text2)">Fetching games…</span>';
-}
-
-/* ── Build a single selectable game card ── */
-function buildSgpCard(g) {
-  const isSelected = sgpState.selectedGame && sgpState.selectedGame.id === g.id;
-  const selClass   = isSelected ? ' selected' : '';
-  const liveClass  = g.isLive   ? ' live-card' : '';
-  const btnLabel   = isSelected ? '&#10003; Selected' : '&#128276; Select this Game';
-
-  let scoreBlock = '';
-  if (g.isLive) {
-    const homeWin = g.homeScore > g.awayScore;
-    const awayWin = g.awayScore > g.homeScore;
-    scoreBlock = `
-      <div class="sgp-card-score">
-        <div class="sgp-score-line">
-          <span class="sgp-score-abbr">${escHtml(g.awayAbbr || g.awayName.slice(0,3))}</span>
-          <span class="sgp-score-pts${awayWin ? ' leading' : ''}">${g.awayScore}</span>
-        </div>
-        <div class="sgp-score-line" style="margin-top:2px">
-          <span class="sgp-score-abbr">${escHtml(g.homeAbbr || g.homeName.slice(0,3))}</span>
-          <span class="sgp-score-pts${homeWin ? ' leading' : ''}">${g.homeScore}</span>
-        </div>
-      </div>
-      <div class="sgp-card-time" style="margin-left:8px">
-        <div class="sgp-time-period">${escHtml(g.periodText)}</div>
-        ${g.clock ? `<div class="sgp-time-clock">${escHtml(g.clock)}</div>` : ''}
-      </div>`;
-  } else {
-    scoreBlock = `
-      <div class="sgp-card-time">
-        <div class="sgp-time-sched">${escHtml(g.scheduledLocal || 'TBD')}</div>
-      </div>`;
-  }
-
-  // Safely encode game object for onclick
-  const gameJson = encodeURIComponent(JSON.stringify(g));
-
-  return `
-    <div class="sgp-card${liveClass}${selClass}" id="sgp-card-${g.id}" onclick="selectSetupGame('${gameJson}')">
-      <div class="sgp-check">&#10003;</div>
-      <div class="sgp-card-top">
-        <div class="sgp-card-icon">${g.icon}</div>
-        <div class="sgp-card-body">
-          <div class="sgp-card-matchup">${escHtml(g.awayName)} vs ${escHtml(g.homeName)}</div>
-          <div class="sgp-card-meta">${escHtml(g.sport)}${g.venue ? ' &middot; ' + escHtml(g.venue) : ''}${g.isLive ? ' &middot; <span style="color:var(--red);font-weight:700">LIVE</span>' : ''}</div>
-        </div>
-        ${scoreBlock}
-      </div>
-      <button class="sgp-select-btn" onclick="event.stopPropagation();selectSetupGame('${gameJson}')">
-        ${btnLabel}
-      </button>
-    </div>`;
-}
-
-/* ── Select a game ── */
-function selectSetupGame(encodedGame) {
-  const g = JSON.parse(decodeURIComponent(encodedGame));
-
-  // Toggle off if tapping the already-selected card
-  if (sgpState.selectedGame && sgpState.selectedGame.id === g.id) {
-    clearSetupGame();
-    return;
-  }
-
-  sgpState.selectedGame = g;
-
-  // Re-render so all cards update their selected state
-  renderSetupGames();
-
-  // Show context banner above alarm config
-  const ctx = document.getElementById('setup-selected-ctx');
-  document.getElementById('sctxIcon').textContent  = g.icon || (SPORT_META[g.sport] && SPORT_META[g.sport].icon) || '';
-  document.getElementById('sctxTeams').textContent = g.awayName + ' vs ' + g.homeName;
-  let metaStr = g.sport;
-  if (g.isLive)     metaStr += ' \u00b7 LIVE \u2014 ' + (g.periodText || '');
-  else if (g.scheduledLocal) metaStr += ' \u00b7 ' + g.scheduledLocal;
-  document.getElementById('sctxMeta').textContent = metaStr;
-  ctx.style.display = 'flex';
-
-  // Pre-fill team name input in alarm config
-  const teamInput = document.getElementById('teamName');
-  if (teamInput) teamInput.value = g.awayName + ' vs ' + g.homeName;
-
-  // Sync the sport chip in setup (in case picker is showing a different sport)
-  const chip = document.querySelector(`.sport-chip[data-sport="${g.sport}"]`);
-  if (chip && g.sport !== currentSport) {
-    document.querySelectorAll('.sport-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    currentSport = g.sport;
-    const meta = SPORT_META[currentSport];
-    if (meta) {
-      document.getElementById('periodLabel').textContent = meta.periodLabel;
-      document.getElementById('periodDesc').textContent  = meta.periodDesc;
-    }
-  }
-
-  // Smooth-scroll to the alarm config section
-  setTimeout(() => {
-    ctx.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, 80);
-}
-
-/* ── Clear selected game ── */
-function clearSetupGame() {
-  sgpState.selectedGame = null;
-  document.getElementById('setup-selected-ctx').style.display = 'none';
-  const teamInput = document.getElementById('teamName');
-  if (teamInput) teamInput.value = '';
-  renderSetupGames(); // remove selected highlight
-}
-
-/* ── Skip — dismiss picker and use generic sport alarm ── */
-function skipSetupGame() {
-  clearSetupGame();
-  hideSetupGamePicker();
-  // Scroll to alarm config
-  const label = document.querySelector('#tab-setup .section-label:last-of-type');
-  if (label) label.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 /* ── HTML escape helper ── */
 function escHtml(str) {
