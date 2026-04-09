@@ -97,21 +97,6 @@ body {
   text-transform: uppercase; color: var(--text2); margin-bottom: 10px;
 }
 
-/* ============================================================
-   ALARM CONFIG CARD
-   ============================================================ */
-.alarm-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
-}
-.alarm-card-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
-}
-.alarm-card-title {
-  font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px;
-}
-.alarm-card-title .icon { font-size: 1.1rem; }
 
 /* Toggle Switch */
 .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
@@ -128,45 +113,6 @@ body {
 }
 .toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
 .toggle input:checked + .toggle-slider::before { background: #000; transform: translate(20px, -50%); }
-
-/* Threshold input */
-.threshold-row {
-  display: flex; align-items: center; gap: 10px; margin-top: 10px;
-  padding-top: 10px; border-top: 1px solid var(--border);
-}
-.threshold-row label { font-size: 0.78rem; color: var(--text2); white-space: nowrap; }
-.threshold-input {
-  background: var(--bg3); border: 1.5px solid var(--border);
-  color: var(--text); border-radius: var(--radius-sm);
-  padding: 6px 10px; font-size: 0.85rem; width: 80px; text-align: center;
-  transition: border-color 0.2s;
-}
-.threshold-input:focus { outline: none; border-color: var(--accent); }
-.threshold-row .add-btn {
-  flex: 1; background: linear-gradient(135deg, var(--accent), #7b61ff);
-  border: none; color: #000; font-weight: 700; font-size: 0.78rem;
-  padding: 7px 12px; border-radius: var(--radius-sm); cursor: pointer;
-  transition: opacity 0.2s;
-}
-.threshold-row .add-btn:hover { opacity: 0.85; }
-.team-input {
-  flex: 1; background: var(--bg3); border: 1.5px solid var(--border);
-  color: var(--text); border-radius: var(--radius-sm);
-  padding: 6px 10px; font-size: 0.85rem;
-  transition: border-color 0.2s;
-}
-.team-input:focus { outline: none; border-color: var(--accent); }
-.team-input::placeholder { color: var(--text2); }
-
-/* Simulate button */
-.simulate-btn {
-  width: 100%; margin-top: 8px;
-  background: none; border: 1.5px solid var(--border);
-  color: var(--text2); padding: 8px; border-radius: var(--radius-sm);
-  font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.simulate-btn:hover { border-color: var(--yellow); color: var(--yellow); }
 
 /* ============================================================
    ACTIVE ALARMS LIST
@@ -802,118 +748,19 @@ body {
 <main class="main">
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('setup')">Setup</button>
-    <button class="tab-btn" onclick="switchTab('alarms')">Alarms <span class="count-badge" id="alarmCount">0</span></button>
+    <button class="tab-btn active" onclick="switchTab('alarms')">Alarms <span class="count-badge" id="alarmCount">0</span></button>
     <button class="tab-btn" onclick="switchTab('games')">Games</button>
     <button class="tab-btn" onclick="switchTab('history')">History</button>
     <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
   </div>
 
-  <!-- ==================== SETUP TAB ==================== -->
-  <div class="tab-panel active" id="tab-setup">
-    <!-- Selected-game context banner (above alarm config) -->
-    <div class="section-label">Configure Alarms</div>
-
-    <!-- Game Start/End -->
-    <div class="alarm-card">
-      <div class="alarm-card-header">
-        <div class="alarm-card-title"><span class="icon">🏁</span> Game Start / End</div>
-        <label class="toggle"><input type="checkbox" id="toggle-gamestart" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div style="font-size:0.78rem;color:var(--text2)">Alert when game begins and when final whistle blows.</div>
-      <button class="simulate-btn" onclick="simulateAlarm('gamestart')">▶ Preview Alert</button>
-    </div>
-
-    <!-- Quarter/Period/Half -->
-    <div class="alarm-card">
-      <div class="alarm-card-header">
-        <div class="alarm-card-title"><span class="icon">⏱️</span> <span id="periodLabel">Quarter Start</span></div>
-        <label class="toggle"><input type="checkbox" id="toggle-period" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div style="font-size:0.78rem;color:var(--text2)" id="periodDesc">Alert at the start of each quarter (1st, 2nd, 3rd, 4th).</div>
-      <button class="simulate-btn" onclick="simulateAlarm('period')">▶ Preview Alert</button>
-    </div>
-
-    <!-- Score Threshold -->
-    <div class="alarm-card">
-      <div class="alarm-card-header">
-        <div class="alarm-card-title"><span class="icon">🎯</span> Score Threshold</div>
-        <label class="toggle"><input type="checkbox" id="toggle-score" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div style="font-size:0.78rem;color:var(--text2)">Alert when any team's score reaches a point value.</div>
-      <div class="threshold-row">
-        <label>Points ≥</label>
-        <input type="number" class="threshold-input" id="scoreThreshold" value="21" min="1" max="200">
-        <button class="add-btn" onclick="addScoreAlarm()">+ Add Alarm</button>
-      </div>
-      <button class="simulate-btn" onclick="simulateAlarm('score')">▶ Preview Alert</button>
-    </div>
-
-    <!-- Team Score Alert -->
-    <div class="alarm-card">
-      <div class="alarm-card-header">
-        <div class="alarm-card-title"><span class="icon">📣</span> Team Scores</div>
-        <label class="toggle"><input type="checkbox" id="toggle-team" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div style="font-size:0.78rem;color:var(--text2)">Alert every time a specific team scores.</div>
-      <div class="threshold-row">
-        <input type="text" class="team-input" id="teamName" placeholder="e.g. Lakers, Chiefs...">
-        <button class="add-btn" onclick="addTeamAlarm()">+ Add Alarm</button>
-      </div>
-      <button class="simulate-btn" onclick="simulateAlarm('team')">▶ Preview Alert</button>
-    </div>
-
-    <!-- Injury Alert -->
-    <div class="alarm-card">
-      <div class="alarm-card-header">
-        <div class="alarm-card-title"><span class="icon">🚑</span> Injury Alert</div>
-        <label class="toggle"><input type="checkbox" id="toggle-injury" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div style="font-size:0.78rem;color:var(--text2)">Alert when a key player injury is reported during the game.</div>
-      <div class="threshold-row">
-        <input type="text" class="team-input" id="injuryPlayer" placeholder="Player name (optional)">
-        <button class="add-btn" onclick="addInjuryAlarm()">+ Add Alarm</button>
-      </div>
-      <button class="simulate-btn" onclick="simulateAlarm('injury')">▶ Preview Alert</button>
-    </div>
-
-    <!-- Overtime -->
-    <div class="alarm-card">
-      <div class="alarm-card-header">
-        <div class="alarm-card-title"><span class="icon">⚡</span> Overtime / Extra Time</div>
-        <label class="toggle"><input type="checkbox" id="toggle-ot" checked><span class="toggle-slider"></span></label>
-      </div>
-      <div style="font-size:0.78rem;color:var(--text2)">Alert when game goes to overtime or extra time.</div>
-      <button class="simulate-btn" onclick="simulateAlarm('ot')">▶ Preview Alert</button>
-    </div>
-
-    <!-- Add All Button -->
-    <button onclick="addAllActiveAlarms()" style="
-      width:100%; padding: 14px; margin-top: 8px;
-      background: linear-gradient(135deg, var(--accent), #7b61ff);
-      border: none; border-radius: var(--radius); color: #000;
-      font-size: 1rem; font-weight: 800; cursor: pointer; letter-spacing: 0.04em;
-      transition: opacity 0.2s;
-    ">⚡ ACTIVATE ALL ALARMS</button>
-    <button onclick="openSetupAlarmModal()" style="
-      width:100%; padding: 12px; margin-top: 10px;
-      background: none; border: 1.5px solid var(--accent);
-      border-radius: var(--radius); color: var(--accent);
-      font-size: 0.88rem; font-weight: 700; cursor: pointer;
-      transition: all 0.2s; display: flex; align-items: center;
-      justify-content: center; gap: 8px;
-    " onmouseover="this.style.background='rgba(0,212,255,0.1)'"
-       onmouseout="this.style.background='none'">
-      ⏱️ Set Period-Specific Alarm
-    </button>
-  </div>
 
   <!-- ==================== ALARMS TAB ==================== -->
-  <div class="tab-panel" id="tab-alarms">
+  <div class="tab-panel active" id="tab-alarms">
     <div id="alarmListEmpty" class="alarm-list-empty">
       <div class="big-icon">🔕</div>
       <div>No active alarms yet.</div>
-      <div style="margin-top:6px;font-size:0.8rem">Go to Setup to add alarms.</div>
+      <div style="margin-top:6px;font-size:0.8rem">Go to Games to set alarms.</div>
     </div>
     <div id="alarmList"></div>
   </div>
@@ -1102,7 +949,7 @@ function init() {
    TABS
    ============================================================ */
 function switchTab(name) {
-  const TAB_ORDER = ['setup','alarms','games','history','settings'];
+  const TAB_ORDER = ['alarms','games','history','settings'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
     b.classList.toggle('active', TAB_ORDER[i] === name);
   });
@@ -1114,9 +961,6 @@ function switchTab(name) {
     stopGamesAutoRefresh();
     if (gamesLastFetch === 0) fetchAllGames(true);
     else { renderGames(); if (gamesLastUpdated) startLastUpdatedTicker(); }
-    startGamesAutoRefresh();
-  } else if (name === 'setup') {
-    stopGamesAutoRefresh();
     startGamesAutoRefresh();
   } else {
     stopGamesAutoRefresh();
@@ -1151,57 +995,6 @@ function addAlarm(type, extra = {}) {
   showToast(ALARM_TYPE_META[type].icon, 'Alarm Added', `${meta.icon} ${currentSport} · ${ALARM_TYPE_META[type].label}${extra.threshold ? ' ≥ ' + extra.threshold : ''}${extra.team ? ': ' + extra.team : ''}`, 'var(--green)');
 }
 
-function addScoreAlarm() {
-  const val = parseInt(document.getElementById('scoreThreshold').value);
-  if (isNaN(val) || val < 1) return;
-  addAlarm('score', { threshold: val });
-}
-
-function addTeamAlarm() {
-  const team = document.getElementById('teamName').value.trim();
-  if (!team) { document.getElementById('teamName').focus(); return; }
-  addAlarm('team', { team });
-  document.getElementById('teamName').value = '';
-}
-
-function addInjuryAlarm() {
-  const player = document.getElementById('injuryPlayer').value.trim();
-  addAlarm('injury', { player: player || 'Any player' });
-  document.getElementById('injuryPlayer').value = '';
-}
-
-function addAllActiveAlarms() {
-  const toggles = {
-    gamestart: 'toggle-gamestart',
-    period:    'toggle-period',
-    score:     'toggle-score',
-    team:      'toggle-team',
-    injury:    'toggle-injury',
-    ot:        'toggle-ot'
-  };
-  const _sgpLabel = null;
-  let count = 0;
-  Object.entries(toggles).forEach(([type, toggleId]) => {
-    if (!document.getElementById(toggleId).checked) return;
-    if (type === 'score') {
-      const val = parseInt(document.getElementById('scoreThreshold').value);
-      if (!isNaN(val)) { addAlarm('score', { threshold: val }); count++; }
-    } else if (type === 'team') {
-      const team = _sgpLabel || document.getElementById('teamName').value.trim();
-      if (team) { addAlarm('team', { team }); count++; }
-      else { addAlarm('team', { team: currentSport + ' any team' }); count++; }
-    } else if (type === 'injury') {
-      const player = document.getElementById('injuryPlayer').value.trim();
-      addAlarm('injury', { player: player || 'Any player' }); count++;
-    } else {
-      addAlarm(type); count++;
-    }
-  });
-  if (count > 0) {
-    switchTab('alarms');
-    showToast('⚡', 'All Alarms Activated', `${count} alarms set for ${SPORT_META[currentSport].icon} ${currentSport}`, 'var(--accent)');
-  }
-}
 
 /* renderAlarmList — see updated version with period support below */
 
@@ -1239,10 +1032,6 @@ const SIM_MESSAGES = {
   ot:        (sport) => [`⚡ Overtime!`, `The ${sport} game is going to overtime!`]
 };
 
-function simulateAlarm(type) {
-  const msgs = SIM_MESSAGES[type](currentSport, { threshold: parseInt(document.getElementById('scoreThreshold')?.value) || 21 });
-  fireAlarm(type, msgs[0], msgs[1], currentSport);
-}
 
 function simulateAlarmById(id) {
   const alarm = alarms.find(a => a.id === id);
@@ -1889,7 +1678,6 @@ function setGamesSportFilter(el) {
   renderGames();
 }
 
-/* prefillAlarmFromGame — defined below with period modal support */
 
 /* Build sport-specific placeholder cards so the screen is never blank.
    Shows "X games loading..." with team emoji for each sport. */
@@ -2092,7 +1880,7 @@ const PERIOD_SECTION_LABEL = {
    ============================================================ */
 let modalState = {
   sport: 'NFL',
-  game: null,          // normalized game object (or null if from Setup tab)
+  game: null,          // normalized game object (or null)
   selectedPeriods: [], // array of period IDs
   currentPeriodNum: 0  // current period number (live games only); 0 = not live
 };
@@ -2417,37 +2205,15 @@ function renderAlarmList() {
   });
 }
 
-/* ============================================================
-   OVERRIDE prefillAlarmFromGame — open modal instead of Setup tab
-   ============================================================ */
 function prefillAlarmFromGame(game) {
   // Normalise sport key
   const sportMap = { MLS: 'MLS', NCAAF: 'NCAAF', NCAAB: 'NCAAB' };
   const targetSport = sportMap[game.sport] || game.sport;
-
-  // Sync currentSport and update period labels
   currentSport = targetSport;
-  const meta = SPORT_META[currentSport];
-  if (meta) {
-    document.getElementById('periodLabel').textContent = meta.periodLabel;
-    document.getElementById('periodDesc').textContent  = meta.periodDesc;
-  }
-
-  // Pre-fill team input (legacy path)
-  const teamLabel = game.awayName + ' vs ' + game.homeName;
-  const teamInput = document.getElementById('teamName');
-  if (teamInput) teamInput.value = teamLabel;
-
   // Open the period-picker modal
   openPeriodModal(targetSport, game);
 }
 
-/* ============================================================
-   SETUP TAB "Set Game Alarm" button — opens modal from Setup tab
-   ============================================================ */
-function openSetupAlarmModal() {
-  openPeriodModal(currentSport, null);
-}
 
 
 /* ── HTML escape helper ── */
