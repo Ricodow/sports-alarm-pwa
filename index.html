@@ -1427,10 +1427,12 @@ async function fetchAllGames(manual = false) {
   try {
     const data = await apiFetch('/api/games');
 
-    gamesData.live     = (data.live     || []).map(enrichGame);
-    gamesData.upcoming = (data.upcoming || []).map(enrichGame)
-                           .sort((a, b) => (a.scheduledRaw || 0) - (b.scheduledRaw || 0));
-    gamesData.final    = (data.final    || []).map(enrichGame);
+    // Server returns flat { games: [...] } — split by status flags
+    const allGames = data.games || [];
+    gamesData.live     = allGames.filter(g => g.isLive).map(enrichGame);
+    gamesData.upcoming = allGames.filter(g => g.isUpcoming && !g.isLive && !g.isFinal).map(enrichGame)
+                           .sort((a, b) => (new Date(a.startTime||0)) - (new Date(b.startTime||0)));
+    gamesData.final    = allGames.filter(g => g.isFinal).map(enrichGame);
 
     gamesLastFetch   = Date.now();
     gamesLastUpdated = Date.now();
