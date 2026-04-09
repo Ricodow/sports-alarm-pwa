@@ -305,6 +305,37 @@ body {
 }
 
 /* ============================================================
+   ACCENT COLOR PICKER
+   ============================================================ */
+.color-swatch-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  padding: 14px 16px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+.color-swatch {
+  width: 36px; height: 36px; border-radius: 50%;
+  cursor: pointer; border: 2.5px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+  position: relative;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 14px rgba(0,0,0,0.4);
+  transform: scale(1.12);
+}
+.color-swatch .swatch-check {
+  font-size: 0.7rem; font-weight: 900;
+  color: #000; opacity: 0; transition: opacity 0.15s;
+  line-height: 1; pointer-events: none;
+}
+.color-swatch.active .swatch-check { opacity: 1; }
+
+/* ============================================================
    MISC
    ============================================================ */
 .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
@@ -1118,6 +1149,10 @@ body {
       </select>
     </div>
     <button class="simulate-btn" onclick="playAlarmSound()" style="margin-top:4px">▶ Test Sound</button>
+
+    <hr class="divider">
+    <div class="section-label">App Color</div>
+    <div class="color-swatch-row" id="accentSwatchRow"></div>
 
     <hr class="divider">
     <div class="section-label">Data</div>
@@ -3145,9 +3180,58 @@ function checkAlarmForGame(alarm, game) {
 
 
 /* ============================================================
+   ACCENT COLOR PICKER
+   ============================================================ */
+const ACCENT_COLORS = [
+  { label: 'Cyan',    value: '#00d4ff' },
+  { label: 'Blue',    value: '#3b82f6' },
+  { label: 'Purple',  value: '#a855f7' },
+  { label: 'Pink',    value: '#ec4899' },
+  { label: 'Red',     value: '#ef4444' },
+  { label: 'Orange',  value: '#f97316' },
+  { label: 'Yellow',  value: '#facc15' },
+  { label: 'Green',   value: '#22c55e' },
+];
+
+function initAccentPicker() {
+  const saved = localStorage.getItem('accentColor');
+  if (saved) applyAccentColor(saved, false);
+
+  const row = document.getElementById('accentSwatchRow');
+  if (!row) return;
+
+  const current = localStorage.getItem('accentColor') ||
+    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+
+  ACCENT_COLORS.forEach(({ label, value }) => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch' + (value === current ? ' active' : '');
+    btn.title = label;
+    btn.style.background = value;
+    btn.setAttribute('aria-label', label + ' accent color');
+    btn.innerHTML = '<span class="swatch-check">&#10003;</span>';
+    btn.onclick = () => {
+      applyAccentColor(value, true);
+      row.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    row.appendChild(btn);
+  });
+}
+
+function applyAccentColor(color, save) {
+  document.documentElement.style.setProperty('--accent', color);
+  // Keep meta theme-color in sync
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', color);
+  if (save) localStorage.setItem('accentColor', color);
+}
+
+/* ============================================================
    BOOT
    ============================================================ */
 init();
+initAccentPicker();
 </script>
 </body>
 </html>
