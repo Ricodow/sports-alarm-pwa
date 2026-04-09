@@ -1001,72 +1001,6 @@ body {
 
   <!-- ==================== SETUP TAB ==================== -->
   <div class="tab-panel active" id="tab-setup">
-    <div class="section-label">Select Sport</div>
-    <div class="sports-grid" id="sportsGrid">
-      <div class="sport-chip active" data-sport="NFL" onclick="selectSport(this)">
-        <span class="sport-icon">🏈</span><span class="sport-name">NFL</span>
-      </div>
-      <div class="sport-chip" data-sport="NBA" onclick="selectSport(this)">
-        <span class="sport-icon">🏀</span><span class="sport-name">NBA</span>
-      </div>
-      <div class="sport-chip" data-sport="MLB" onclick="selectSport(this)">
-        <span class="sport-icon">⚾</span><span class="sport-name">MLB</span>
-      </div>
-      <div class="sport-chip" data-sport="NHL" onclick="selectSport(this)">
-        <span class="sport-icon">🏒</span><span class="sport-name">NHL</span>
-      </div>
-      <div class="sport-chip" data-sport="Soccer" onclick="selectSport(this)">
-        <span class="sport-icon">⚽</span><span class="sport-name">Soccer</span>
-      </div>
-    </div>
-
-    <!-- Status indicator: shows fetch state under sport picker -->
-    <div id="sgp-status-bar" style="font-size:0.72rem;color:var(--text2);margin-bottom:12px;min-height:1.1em;text-align:center;display:none"></div>
-
-    <!-- ══ INLINE GAME PICKER (appears after sport selection) ══ -->
-    <div id="setup-game-picker" style="display:none">
-
-      <div class="sgp-header">
-        <div class="sgp-title">Choose a Game <span id="sgpSportLabel" style="color:var(--accent)"></span></div>
-        <button class="refresh-btn" id="sgpRefreshBtn" onclick="loadSetupGames(true)" style="font-size:0.68rem;padding:3px 9px">
-          <span class="refresh-icon">&#8635;</span> Refresh
-        </button>
-      </div>
-
-      <!-- Live Now / Upcoming sub-tabs -->
-      <div class="sgp-subtabs">
-        <button class="sgp-subtab active" id="sgpTabLive" onclick="switchSgpTab('live')">
-          <span class="sgp-live-dot"></span> Live Now
-        </button>
-        <button class="sgp-subtab" id="sgpTabUpcoming" onclick="switchSgpTab('upcoming')">
-          &#128197; Upcoming
-        </button>
-      </div>
-
-      <!-- Live games list -->
-      <div id="sgpLiveList" class="sgp-list">
-        <div class="sgp-spinner">
-          <div class="spinner-ring"></div>
-          <span>Loading games&hellip;</span>
-        </div>
-      </div>
-
-      <!-- Upcoming games list (hidden by default) -->
-      <div id="sgpUpcomingList" class="sgp-list" style="display:none">
-        <div class="sgp-spinner">
-          <div class="spinner-ring"></div>
-          <span>Loading games&hellip;</span>
-        </div>
-      </div>
-
-      <!-- Skip option -->
-      <div class="sgp-skip">
-        <button class="sgp-skip-btn" onclick="skipSetupGame()">
-          Skip &mdash; set a generic sport alarm instead
-        </button>
-      </div>
-    </div>
-
     <!-- Selected-game context banner (above alarm config) -->
     <div id="setup-selected-ctx">
       <div class="sctx-icon" id="sctxIcon">&#127944;</div>
@@ -1412,8 +1346,9 @@ function selectSport(el) {
   document.getElementById('setup-selected-ctx').style.display = 'none';
   const teamInput = document.getElementById('teamName');
   if (teamInput) teamInput.value = '';
+  // showSetupGamePicker renders cached data immediately; loadSetupGames fetches fresh data if needed
   showSetupGamePicker(currentSport);
-  loadSetupGames(false);
+  loadSetupGames(false); // throttled — no-ops if fetched recently, fetches otherwise
 }
 
 /* ============================================================
@@ -1829,7 +1764,7 @@ function timeAgo(ts) {
    ============================================================ */
 
 // ── Change this to your real VPS IP once deployed ──
-const API_BASE = 'https://147.93.128.91:3001';
+const API_BASE = 'http://147.93.128.91:3001';
 
 // Sport key → VPS route segment used for /api/{route}/games etc.
 const VPS_SPORT_ROUTE = {
@@ -1976,6 +1911,7 @@ function parseClearSportsGame(game, sportKey) {
     period,
     clock,
     periodText,
+    scheduledRaw:  scheduledRaw ? scheduledRaw.getTime() : 0,
     scheduledLocal,
     statusDesc:    game.statusDescription || stateRaw,
     venue:         game.venue || '',
@@ -2020,9 +1956,7 @@ async function fetchAllGames(manual = false) {
   if (btn) btn.classList.add('spinning');
 
   try {
-    const results = await Promise.all(
-      SPORT_KEYS.map(key => fetchSport(key))
-    );
+    const results = await Promise.all(SPORT_KEYS.map(key => fetchSport(key)));
 
     const allFailed  = results.every(r => r === null);
     const anyFailed  = results.some(r => r === null);
@@ -2037,7 +1971,7 @@ async function fetchAllGames(manual = false) {
     }
 
     gamesData.live     = all.filter(g => g.isLive);
-    gamesData.upcoming = all.filter(g => g.isUpcoming);
+    gamesData.upcoming = all.filter(g => g.isUpcoming).sort((a, b) => a.scheduledRaw - b.scheduledRaw);
     gamesData.final    = all.filter(g => g.isFinal);
     gamesLastFetch     = Date.now();
     gamesLastUpdated   = Date.now();
@@ -2111,10 +2045,8 @@ function renderUpcomingGames() {
     return;
   }
 
-  // Sort by scheduled time
-  const sorted = [...filtered].sort((a, b) => {
-    return (a.scheduledRaw || 0) - (b.scheduledRaw || 0);
-  });
+  // Sort by scheduled time (scheduledRaw is epoch ms)
+  const sorted = [...filtered].sort((a, b) => (a.scheduledRaw || 0) - (b.scheduledRaw || 0));
 
   container.innerHTML = sorted.map(g => buildUpcomingCard(g)).join('');
 }
@@ -2766,15 +2698,23 @@ let sgpState = {
   selectedGame: null,      // normalized game object or null
   loading:      false,
   lastFetch:    {},        // { sport: timestamp }
-  fetchAbort:   null
+  fetchAbort:   null,
+  cache:        {}         // { sport: { live: [], upcoming: [] } } — per-sport data cache
 };
 
 /* ── Show / hide the picker when sport changes ── */
 function showSetupGamePicker(sport) {
   sgpState.sport = sport;
   sgpState.activeTab = 'live';
-  sgpState.live = [];
-  sgpState.upcoming = [];
+
+  // Restore cached data for this sport if available — never reset to empty on sport switch
+  if (sgpState.cache[sport]) {
+    sgpState.live     = sgpState.cache[sport].live;
+    sgpState.upcoming = sgpState.cache[sport].upcoming;
+  } else {
+    sgpState.live     = [];
+    sgpState.upcoming = [];
+  }
   // Don't auto-clear selected game when switching sports — clearSetupGame() does that explicitly
 
   const picker = document.getElementById('setup-game-picker');
@@ -2784,8 +2724,15 @@ function showSetupGamePicker(sport) {
   const sportIcon = (SPORT_META[sport] && SPORT_META[sport].icon) || '';
   document.getElementById('sgpSportLabel').textContent = sportIcon + ' ' + sport;
 
-  // Reset sub-tab UI
-  switchSgpTab('live', /* skipLoad */ false);
+  // Reset sub-tab UI without triggering a fetch
+  sgpState.activeTab = 'live';
+  document.getElementById('sgpTabLive').classList.add('active');
+  document.getElementById('sgpTabUpcoming').classList.remove('active');
+  document.getElementById('sgpLiveList').style.display     = 'flex';
+  document.getElementById('sgpUpcomingList').style.display = 'none';
+
+  // Render whatever data we have (from cache or empty)
+  renderSetupGames();
 }
 
 function hideSetupGamePicker() {
@@ -2793,20 +2740,13 @@ function hideSetupGamePicker() {
 }
 
 /* ── Sub-tab switcher ── */
-function switchSgpTab(tab, skipLoad) {
+function switchSgpTab(tab) {
   sgpState.activeTab = tab;
   document.getElementById('sgpTabLive').classList.toggle('active', tab === 'live');
   document.getElementById('sgpTabUpcoming').classList.toggle('active', tab === 'upcoming');
   document.getElementById('sgpLiveList').style.display     = tab === 'live'     ? 'flex' : 'none';
   document.getElementById('sgpUpcomingList').style.display = tab === 'upcoming' ? 'flex' : 'none';
-
-  // If we already have data, just re-render; otherwise fetch
-  const hasData = sgpState.live.length > 0 || sgpState.upcoming.length > 0;
-  if (!skipLoad && !hasData) {
-    loadSetupGames(false);
-  } else {
-    renderSetupGames();
-  }
+  renderSetupGames();
 }
 
 /* ── Fetch games for the current sport ── */
@@ -2817,8 +2757,6 @@ async function loadSetupGames(manual) {
 
   // Throttle: tight during live games, relaxed otherwise
   if (!manual && (now - last) < (_hasLiveGames() ? 25000 : 240000)) {
-    document.getElementById('sgpLiveList').innerHTML     = '';
-    document.getElementById('sgpUpcomingList').innerHTML = '';
     renderSetupGames();
     return;
   }
@@ -2826,10 +2764,8 @@ async function loadSetupGames(manual) {
   sgpState.loading = true;
   setSgpStatusLoading();
 
-  // Show spinners
-  const spinnerHTML = '<div class="sgp-spinner"><div class="spinner-ring"></div><span>Loading games\u2026</span></div>';
-  document.getElementById('sgpLiveList').innerHTML     = spinnerHTML;
-  document.getElementById('sgpUpcomingList').innerHTML = spinnerHTML;
+  // Re-render now so spinner shows (renderSgpList checks sgpState.loading)
+  renderSetupGames();
 
   // Spinning refresh button
   const btn = document.getElementById('sgpRefreshBtn');
@@ -2858,8 +2794,10 @@ async function loadSetupGames(manual) {
       .filter(Boolean);
 
     sgpState.live     = all.filter(g => g.isLive);
-    sgpState.upcoming = all.filter(g => g.isUpcoming);
+    sgpState.upcoming = all.filter(g => g.isUpcoming).sort((a, b) => a.scheduledRaw - b.scheduledRaw);
     sgpState.lastFetch[sport] = Date.now();
+    // Save into per-sport cache so switching back restores data instantly
+    sgpState.cache[sport] = { live: sgpState.live, upcoming: sgpState.upcoming };
     updateSgpStatus(sport, sgpState.live, sgpState.upcoming);
   } catch(e) {
     sgpState.live = null; // null = error state
@@ -2881,6 +2819,12 @@ function renderSetupGames() {
 function renderSgpList(tab, container) {
   if (!container) return;
   const games = sgpState[tab]; // null = error, [] = empty, [...] = has games
+
+  // Still loading — show spinner
+  if (sgpState.loading && (games === null || games.length === 0)) {
+    container.innerHTML = '<div class="sgp-spinner"><div class="spinner-ring"></div><span>Loading games\u2026</span></div>';
+    return;
+  }
 
   if (games === null) {
     container.innerHTML = '<div class="sgp-error">&#9888;&#65039; Could not load games. Check your connection and <button onclick="loadSetupGames(true)" style="background:none;border:none;color:var(--red);font-weight:700;cursor:pointer;text-decoration:underline;font-size:inherit;padding:0;">Retry</button></div>';
