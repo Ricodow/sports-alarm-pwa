@@ -1825,6 +1825,9 @@ function openPeriodModal(sport, game) {
   // Build pills
   buildPeriodPills(sport);
 
+  // Auto-select the next upcoming period
+  autoSelectNextPeriod(sport);
+
   // Update summary
   updateAlarmSummary();
 
@@ -1862,6 +1865,42 @@ function buildPeriodPills(sport) {
     }
     group.appendChild(btn);
   });
+}
+
+/* ============================================================
+   AUTO-SELECT NEXT PERIOD
+   Picks the first non-passed period pill when the modal opens.
+   For live games: selects the next period after the current one.
+   For upcoming games / generic: selects the first period (e.g. Q1).
+   ============================================================ */
+function autoSelectNextPeriod(sport) {
+  const options = PERIOD_OPTIONS[sport] || PERIOD_OPTIONS['NFL'];
+  const cur = modalState.currentPeriodNum; // 0 if not live
+
+  // Find the first period that hasn't passed yet
+  let targetOpt = null;
+  if (cur > 0) {
+    // Live game: pick the next period after current (cur+1)
+    targetOpt = options.find(o => periodOrdinal(o.id, sport) === cur + 1);
+    // If no "next" (e.g. last period), fall back to first non-passed
+    if (!targetOpt) {
+      targetOpt = options.find(o => !isPeriodPassed(o.id, sport) && o.id !== 'OT' && o.id !== 'ET' && o.id !== 'EX' && o.id !== 'PK');
+    }
+  } else {
+    // Upcoming or generic: pick the first period (Q1 / P1 / H1 / Inn 1)
+    targetOpt = options.find(o => o.id !== 'OT' && o.id !== 'ET' && o.id !== 'EX' && o.id !== 'PK');
+  }
+
+  if (!targetOpt) return;
+
+  // Mark it selected in state
+  modalState.selectedPeriods = [targetOpt.id];
+
+  // Visually select the pill
+  const pill = document.querySelector(`#periodPillGroup button[data-id="${targetOpt.id}"]`);
+  if (pill && !pill.classList.contains('passed')) {
+    pill.classList.add('selected');
+  }
 }
 
 /* ============================================================
