@@ -1993,8 +1993,10 @@ function confirmPeriodAlarm() {
     : null;
 
   // Determine which toggles are on
+  // If the user selected specific periods, treat the period alarm as enabled
+  // regardless of whether they remembered to flip the toggle.
   const doGameStart = document.getElementById('sheet-toggle-gamestart').checked;
-  const doPeriod    = document.getElementById('sheet-toggle-period').checked;
+  const doPeriod    = document.getElementById('sheet-toggle-period').checked || periods.length > 0;
   const doOT        = document.getElementById('sheet-toggle-ot').checked;
 
   let added = 0;
