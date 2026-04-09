@@ -1,9 +1,0 @@
-{
-  "name": "sports-alarm-pwa",
-  "functions": [
-    {
-      "path": "/espn-proxy",
-      "function": "edge-functions/espn-proxy.js"
-    }
-  ]
-}
