@@ -1321,29 +1321,12 @@ function timeAgo(ts) {
 
 
 /* ============================================================
-   VPS PROXY — ALL DATA FETCHING
+   VPS API — ALL DATA FETCHING
    ============================================================ */
 
-// ── Change this to your real VPS IP once deployed ──
 const API_BASE = 'http://147.93.128.91:3001';
 
-// Sport key → VPS route segment used for /api/{route}/games etc.
-const VPS_SPORT_ROUTE = {
-  NFL:    'nfl',
-  NBA:    'nba',
-  MLB:    'mlb',
-  NHL:    'nhl',
-  MLS:    'soccer',
-  Soccer: 'soccer',
-  NCAAF:  'nfl',
-  NCAAB:  'nba',
-};
-
-// Full list of sport keys the app tracks
-const SPORT_KEYS = ['NFL', 'NBA', 'MLB', 'NHL', 'MLS', 'NCAAF', 'NCAAB'];
-
-/* Simple fetch wrapper — VPS handles CORS, no proxy chain needed.
-   Returns parsed JSON or throws on network/HTTP error. */
+/* Simple fetch wrapper — VPS handles CORS, no proxy chain needed. */
 async function apiFetch(path, timeoutMs = 10000) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -1359,10 +1342,10 @@ async function apiFetch(path, timeoutMs = 10000) {
 }
 
 /* ============================================================
-   GAMES — VPS PROXY
+   GAMES — server-side polling via /api/games
    ============================================================ */
 
-/* ── Placeholder data shown when ALL proxies fail ── */
+/* ── Placeholder data shown when the server is unreachable ── */
 const SPORT_PLACEHOLDERS = {
   NFL:   { icon: '🏈', label: 'NFL',   teams: ['Chiefs', 'Eagles', 'Cowboys', 'Ravens'] },
   NBA:   { icon: '🏀', label: 'NBA',   teams: ['Lakers', 'Celtics', 'Warriors', 'Nuggets'] },
@@ -1373,51 +1356,21 @@ const SPORT_PLACEHOLDERS = {
   NCAAB: { icon: '🎓', label: 'CBB',  teams: ['Duke', 'Kansas', 'UNC', 'Kentucky'] }
 };
 
-/* ── localStorage cache helpers (30-second TTL) ── */
-function _hasLiveGames() {
-  return gamesData.live && gamesData.live.length > 0;
-}
-
-function _cacheTTL() {
-  return _hasLiveGames() ? 30000 : 300000; // 30s during live games, 5 min otherwise
-}
-
-function _cacheKey(sportKey) { return 'sa_sports_' + sportKey; }
-
-function _writeCache(sportKey, rawData) {
-  try {
-    localStorage.setItem(_cacheKey(sportKey), JSON.stringify({ ts: Date.now(), data: rawData }));
-  } catch(e) { /* quota full — ignore */ }
-}
-
-function _readCache(sportKey) {
-  try {
-    const raw = localStorage.getItem(_cacheKey(sportKey));
-    if (!raw) return null;
-    const entry = JSON.parse(raw);
-    if (!entry || !entry.ts || !entry.data) return null;
-    if (Date.now() - entry.ts > _cacheTTL()) return null; // expired
-    return entry.data;
-  } catch(e) { return null; }
-}
-
 /* ── Visibility-aware poll interval tracking ── */
 let _isPageVisible = (document.visibilityState === 'visible');
 document.addEventListener('visibilitychange', () => {
   _isPageVisible = (document.visibilityState === 'visible');
-  // Restart auto-refresh with the correct interval when page visibility changes
   if (gamesRefreshInterval !== null) {
     stopGamesAutoRefresh();
     startGamesAutoRefresh();
   }
 });
 
-/* Track whether ALL proxies failed on the last attempt */
-let _allProxiesFailed = false;
-
 const SPORT_ICONS = {
   NFL: '🏈', NBA: '🏀', MLB: '⚾', NHL: '🏒',
-  MLS: '⚽', NCAAF: '🏟️', NCAAB: '🎓'
+  MLS: '⚽', NCAAF: '🏟️', NCAAB: '🎓',
+  nfl: '🏈', nba: '🏀', mlb: '⚾', nhl: '🏒',
+  soccer: '⚽'
 };
 
 // All fetched games: { live: [], upcoming: [], final: [] }
@@ -1428,88 +1381,43 @@ let gamesLastFetch = 0;
 let gamesLastUpdated = 0;      // epoch ms of last successful fetch
 let lastUpdatedTimer = null;   // ticks the "X seconds ago" label
 
-/* Parse a single ClearSports game object into the normalized shape the UI expects.
-   ClearSports returns games with fields like:
-     id, homeTeam{name,abbreviation}, awayTeam{name,abbreviation},
-     homeScore, awayScore, status (scheduled|in_progress|final),
-     period, clock, statusDescription, startTime, venue */
-function parseClearSportsGame(game, sportKey) {
-  if (!game) return null;
+function _hasLiveGames() {
+  return gamesData.live && gamesData.live.length > 0;
+}
 
-  const stateRaw = (game.status || '').toLowerCase();
-  const isLive     = stateRaw === 'in_progress' || stateRaw === 'live' || stateRaw === 'inprogress';
-  const isFinal    = stateRaw === 'final' || stateRaw === 'completed' || stateRaw === 'finished';
-  const isUpcoming = !isLive && !isFinal;
+/* Normalise sport key from server (lowercase) to UI key (uppercase).
+   Server writes sport as 'nba', 'nfl', 'soccer', etc. */
+function normalizeSportKey(sport) {
+  const map = { nba: 'NBA', nfl: 'NFL', nhl: 'NHL', mlb: 'MLB', soccer: 'MLS' };
+  return map[sport] || (sport ? sport.toUpperCase() : sport);
+}
 
-  const homeScore = parseInt(game.homeScore) || 0;
-  const awayScore = parseInt(game.awayScore) || 0;
-
-  const period     = parseInt(game.period) || 0;
-  const clock      = game.clock || game.displayClock || '';
-  const periodText = game.statusDescription || game.periodDescription || (isLive ? ('Period ' + period) : '');
-
-  const scheduledRaw = game.startTime ? new Date(game.startTime) : null;
-  const scheduledLocal = scheduledRaw
-    ? scheduledRaw.toLocaleString(undefined, {
+/* Enrich a game object from the server with UI-friendly fields:
+   - sport key uppercased for filter matching
+   - icon resolved
+   - scheduledRaw (epoch ms) for sort */
+function enrichGame(g) {
+  const sportKey = normalizeSportKey(g.sport);
+  const icon = g.icon || SPORT_ICONS[g.sport] || SPORT_ICONS[sportKey] || '🏅';
+  const scheduledRaw = g.startTime ? new Date(g.startTime).getTime() : 0;
+  const scheduledLocal = g.scheduledLocal || (scheduledRaw
+    ? new Date(scheduledRaw).toLocaleString(undefined, {
         weekday: 'short', month: 'short', day: 'numeric',
         hour: 'numeric', minute: '2-digit'
       })
-    : '';
-
-  return {
-    id:            game.id || String(Math.random()),
-    sport:         sportKey,
-    icon:          SPORT_ICONS[sportKey] || '🏆',
-    homeName:      game.homeTeam?.name || game.homeName || 'Home',
-    homeAbbr:      game.homeTeam?.abbreviation || game.homeAbbr || '',
-    homeScore,
-    awayName:      game.awayTeam?.name || game.awayName || 'Away',
-    awayAbbr:      game.awayTeam?.abbreviation || game.awayAbbr || '',
-    awayScore,
-    isLive,
-    isFinal,
-    isUpcoming,
-    period,
-    clock,
-    periodText,
-    scheduledRaw:  scheduledRaw ? scheduledRaw.getTime() : 0,
-    scheduledLocal,
-    statusDesc:    game.statusDescription || stateRaw,
-    venue:         game.venue || '',
-  };
+    : '');
+  // Normalize status — server sends status:'in'|'pre'|'final' (ESPN shape)
+  // as well as legacy boolean flags. Support both.
+  const isLive  = g.isLive  !== undefined ? g.isLive  : (g.status === 'in');
+  const isFinal = g.isFinal !== undefined ? g.isFinal : (g.status === 'final');
+  return { ...g, sport: sportKey, icon, scheduledRaw, scheduledLocal, isLive, isFinal };
 }
 
-/* Fetch one sport from VPS proxy — returns null on error, [] on empty, array on success.
-   Writes successful responses to localStorage cache (TTL from _cacheTTL()).
-   ClearSports response shape: { games: [...] } */
-async function fetchSport(sportKey) {
-  const route = VPS_SPORT_ROUTE[sportKey];
-  if (!route) return null;
-  try {
-    // Try fresh cache first
-    const cached = _readCache(sportKey);
-    if (cached) {
-      return (cached.games || [])
-        .map(g => parseClearSportsGame(g, sportKey))
-        .filter(Boolean);
-    }
-    // Live fetch from VPS
-    const data = await apiFetch('/api/' + route + '/games?date=today');
-    _writeCache(sportKey, data);
-    return (data.games || [])
-      .map(g => parseClearSportsGame(g, sportKey))
-      .filter(Boolean);
-  } catch (e) {
-    console.warn('VPS fetch failed for', sportKey, e.message);
-    return null; // null = fetch error (distinct from [] = no games today)
-  }
-}
-
-/* Fetch all sports in parallel.
-   Throttled to 30s unless manual=true.
-   On complete proxy failure: shows friendly placeholder cards (never blank). */
+/* Fetch the aggregated games.json from the server's /api/games endpoint.
+   The server polls ClearSports every 30s and writes a normalized payload:
+   { updatedAt, live: [...], upcoming: [...], final: [...] }
+   Games are already in the canonical shape — no client-side parsing needed. */
 async function fetchAllGames(manual = false) {
-  // Throttle: tighter during live games, relaxed otherwise
   const _throttleMs = _hasLiveGames() ? 25000 : 240000;
   if (!manual && Date.now() - gamesLastFetch < _throttleMs) return;
 
@@ -1517,38 +1425,22 @@ async function fetchAllGames(manual = false) {
   if (btn) btn.classList.add('spinning');
 
   try {
-    const results = await Promise.all(SPORT_KEYS.map(key => fetchSport(key)));
+    const data = await apiFetch('/api/games');
 
-    const allFailed  = results.every(r => r === null);
-    const anyFailed  = results.some(r => r === null);
-    const all        = results.filter(r => r !== null).flat();
+    gamesData.live     = (data.live     || []).map(enrichGame);
+    gamesData.upcoming = (data.upcoming || []).map(enrichGame)
+                           .sort((a, b) => (a.scheduledRaw || 0) - (b.scheduledRaw || 0));
+    gamesData.final    = (data.final    || []).map(enrichGame);
 
-    _allProxiesFailed = allFailed;
-
-    if (allFailed) {
-      // All proxies dead — show sport-specific placeholders instead of blank
-      showGamesPlaceholder();
-      return;
-    }
-
-    gamesData.live     = all.filter(g => g.isLive);
-    gamesData.upcoming = all.filter(g => g.isUpcoming).sort((a, b) => a.scheduledRaw - b.scheduledRaw);
-    gamesData.final    = all.filter(g => g.isFinal);
-    gamesLastFetch     = Date.now();
-    gamesLastUpdated   = Date.now();
+    gamesLastFetch   = Date.now();
+    gamesLastUpdated = Date.now();
     startLastUpdatedTicker();
 
     renderGames();
     checkAlarmsAgainstGames();
     adjustRefreshRate();
-
-    // Soft warning if some (not all) sports failed
-    if (anyFailed) {
-      const failedSports = SPORT_KEYS.filter((k, i) => results[i] === null);
-      console.warn('Partial fetch failure:', failedSports.join(', '));
-    }
   } catch (e) {
-    _allProxiesFailed = true;
+    console.warn('fetchAllGames failed:', e.message);
     showGamesPlaceholder();
   } finally {
     if (btn) btn.classList.remove('spinning');
