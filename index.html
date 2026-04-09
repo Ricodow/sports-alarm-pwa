@@ -1911,6 +1911,7 @@ function parseClearSportsGame(game, sportKey) {
     period,
     clock,
     periodText,
+    scheduledRaw:  scheduledRaw ? scheduledRaw.getTime() : 0,
     scheduledLocal,
     statusDesc:    game.statusDescription || stateRaw,
     venue:         game.venue || '',
@@ -2046,10 +2047,8 @@ function renderUpcomingGames() {
     return;
   }
 
-  // Sort by scheduled time
-  const sorted = [...filtered].sort((a, b) => {
-    return (a.scheduledRaw || 0) - (b.scheduledRaw || 0);
-  });
+  // Sort by scheduled time (scheduledRaw is epoch ms)
+  const sorted = [...filtered].sort((a, b) => (a.scheduledRaw || 0) - (b.scheduledRaw || 0));
 
   container.innerHTML = sorted.map(g => buildUpcomingCard(g)).join('');
 }
