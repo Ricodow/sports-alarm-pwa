@@ -1556,7 +1556,7 @@ function buildUpcomingCard(g) {
         <span class="upcoming-badge">Soon</span>
       </div>
       <div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px;padding:0 2px">
-        📅 ${g.scheduledLocal || 'Time TBD'}
+        📅 ${g.statusDesc || g.scheduledLocal || (g.startTime ? new Date(g.startTime).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : 'Time TBD')}
       </div>
       <button class="game-set-alarm-btn" onclick="prefillAlarmFromGame(${JSON.stringify(g).replace(/"/g, '&quot;')})">
         🔔 Set Alarm
