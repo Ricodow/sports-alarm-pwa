@@ -1011,6 +1011,25 @@ body {
       <button class="sctx-clear" onclick="clearSetupGame()">&#10005; Clear</button>
     </div>
 
+    <!-- ══ Setup Game Picker ══ -->
+    <div id="setup-game-picker" style="display:none">
+      <div class="sgp-header">
+        <div class="sgp-title" id="sgpSportLabel"></div>
+        <button id="sgpRefreshBtn" onclick="loadSetupGames(true)" title="Refresh games" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem;padding:4px 6px;border-radius:6px;transition:color 0.18s;">&#8635;</button>
+      </div>
+      <div class="sgp-subtabs">
+        <button class="sgp-subtab active" id="sgpTabLive" onclick="switchSgpTab('live')">
+          <span class="sgp-live-dot"></span> Live
+        </button>
+        <button class="sgp-subtab" id="sgpTabUpcoming" onclick="switchSgpTab('upcoming')">
+          &#128197; Upcoming
+        </button>
+      </div>
+      <div class="sgp-list" id="sgpLiveList" style="display:flex"></div>
+      <div class="sgp-list" id="sgpUpcomingList" style="display:none"></div>
+      <div id="sgp-status-bar" style="display:none;font-size:0.72rem;margin-top:8px;padding:4px 2px;"></div>
+    </div>
+
     <div class="section-label">Configure Alarms</div>
 
     <!-- Game Start/End -->
