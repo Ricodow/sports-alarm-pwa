@@ -1443,8 +1443,10 @@ async function fetchAllGames(manual = false) {
       icon: g.icon || SPORT_ICONS[g.sport?.toUpperCase()] || '🏆',
       sport: g.sport?.toUpperCase() || g.sport
     }));
-    gamesData.live     = allGames.filter(g => g.isLive);
-    gamesData.upcoming = allGames.filter(g => g.isUpcoming && !g.isLive && !g.isFinal)
+    const now = Date.now();
+    const hasStarted = g => g.startTime && new Date(g.startTime).getTime() < now;
+    gamesData.live     = allGames.filter(g => g.isLive || (hasStarted(g) && !g.isFinal));
+    gamesData.upcoming = allGames.filter(g => !hasStarted(g) && !g.isLive && !g.isFinal)
                            .sort((a, b) => (new Date(a.startTime||0)) - (new Date(b.startTime||0)));
     gamesData.final    = allGames.filter(g => g.isFinal).map(enrichGame);
 
