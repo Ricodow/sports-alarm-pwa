@@ -931,10 +931,16 @@ function init() {
     deferredInstallPrompt = null;
   });
 
-  // Start background game polling immediately (not just when Games tab opens)
-  // This keeps alarm checking working even if user never visits Games tab
+  // Re-schedule any gamestart alarms saved from a previous session
+  alarms.forEach(alarm => {
+    if (alarm.type === 'gamestart' && alarm.gameTimeRaw) {
+      scheduleGameStartAlarm(alarm);
+    }
+  });
+
+  // Fetch once on load to populate game data and determine polling window
   fetchAllGames(true);
-  startGamesAutoRefresh();
+  // startGamesAutoRefresh() is now called by schedulePollingWindow() only during live game windows
 
   // ── Adaptive alarm check interval: fast during live games, slow otherwise ──
   startAlarmCheckInterval();
@@ -1460,6 +1466,7 @@ async function fetchAllGames(manual = false) {
     renderGames();
     checkAlarmsAgainstGames();
     adjustRefreshRate();
+    schedulePollingWindow();
   } catch (e) {
     console.warn('fetchAllGames failed:', e.message);
     showGamesPlaceholder();
@@ -1680,6 +1687,57 @@ function stopAlarmCheckInterval() {
     clearInterval(_alarmCheckInterval);
     _alarmCheckInterval = null;
   }
+}
+
+/* ============================================================
+   SMART POLLING WINDOW — only poll during live game windows
+   ============================================================ */
+let _pollWindowStartTimer = null;
+let _pollWindowStopTimer  = null;
+
+function schedulePollingWindow() {
+  // Clear any existing window timers
+  if (_pollWindowStartTimer) { clearTimeout(_pollWindowStartTimer); _pollWindowStartTimer = null; }
+  if (_pollWindowStopTimer)  { clearTimeout(_pollWindowStopTimer);  _pollWindowStopTimer  = null; }
+
+  const now = Date.now();
+  const upcoming = gamesData.upcoming || [];
+  if (upcoming.length === 0) return; // nothing to schedule
+
+  // Find earliest start and latest expected end (start + 4 hours)
+  const startTimes = upcoming
+    .map(g => g.startTime ? new Date(g.startTime).getTime() : 0)
+    .filter(t => t > now);
+  if (startTimes.length === 0) return;
+
+  const earliestStart = Math.min(...startTimes);
+  const latestStart   = Math.max(...startTimes);
+  const windowEnd     = latestStart + (4 * 60 * 60 * 1000); // 4 hrs after last game starts
+
+  const msUntilStart = earliestStart - now;
+  const msUntilEnd   = windowEnd - now;
+
+  if (msUntilEnd <= 0) return; // all games already over
+
+  if (msUntilStart > 0) {
+    // No live games yet — schedule polling to start when first game begins
+    console.log('[poll-window] Polling will start in', Math.round(msUntilStart / 60000), 'min');
+    stopGamesAutoRefresh();
+    stopAlarmCheckInterval();
+    _pollWindowStartTimer = setTimeout(() => {
+      console.log('[poll-window] Game window opened — starting polling');
+      fetchAllGames(true);
+      startGamesAutoRefresh();
+      startAlarmCheckInterval();
+    }, msUntilStart);
+  }
+
+  // Schedule polling to STOP after the last game window closes
+  _pollWindowStopTimer = setTimeout(() => {
+    console.log('[poll-window] Game window closed — stopping polling');
+    stopGamesAutoRefresh();
+    stopAlarmCheckInterval();
+  }, msUntilEnd);
 }
 
 function stopGamesAutoRefresh() {
@@ -2055,6 +2113,11 @@ function confirmPeriodAlarm() {
   if (doGameStart) {
     addAlarmWithPeriods('gamestart', { team: gameLabel, periods: [], periodLabels: [], gameTime, gameTimeRaw });
     added++;
+    // Schedule a local setTimeout to fire at exact game start time
+    if (gameTimeRaw && gameTimeRaw > Date.now()) {
+      const newAlarm = alarms[alarms.length - 1];
+      scheduleGameStartAlarm(newAlarm);
+    }
   }
   if (doPeriod) {
     addAlarmWithPeriods('period', { team: gameLabel, periods, periodLabels, periodShort, gameTime, gameTimeRaw });
@@ -2659,6 +2722,36 @@ function applyAccentColor(color, save) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', color);
   if (save) localStorage.setItem('accentColor', color);
+}
+
+/* ============================================================
+   SCHEDULED GAME START ALARMS (client-side setTimeout)
+   ============================================================ */
+const _scheduledAlarmTimers = {}; // alarmId -> timeoutId
+
+function scheduleGameStartAlarm(alarm) {
+  if (!alarm.gameTimeRaw || alarm.type !== 'gamestart') return;
+  const msUntilStart = alarm.gameTimeRaw - Date.now();
+  if (msUntilStart <= 0) return; // already started or past
+
+  // Cancel any existing timer for this alarm
+  if (_scheduledAlarmTimers[alarm.id]) {
+    clearTimeout(_scheduledAlarmTimers[alarm.id]);
+  }
+
+  console.log('[schedule] Game start alarm set for', alarm.team, 'in', Math.round(msUntilStart / 60000), 'min');
+
+  _scheduledAlarmTimers[alarm.id] = setTimeout(() => {
+    delete _scheduledAlarmTimers[alarm.id];
+    // Only fire if alarm still exists (user may have deleted it)
+    const stillExists = alarms.find(a => a.id === alarm.id);
+    if (!stillExists) return;
+    const sport = alarm.sport;
+    fireAlarm('gamestart',
+      (SPORT_META[sport]?.icon || '🏆') + ' Game Starting!',
+      (alarm.team || sport) + ' is about to begin. Get ready!',
+      sport, alarm.id);
+  }, msUntilStart);
 }
 
 /* ============================================================
