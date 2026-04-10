@@ -939,6 +939,9 @@ function init() {
   // ── Adaptive alarm check interval: fast during live games, slow otherwise ──
   startAlarmCheckInterval();
 
+  // ── SSE: real-time push for game_start / quarter_start events ──
+  startSSEListener();
+
   // Register service worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch(() => {});
@@ -1714,6 +1717,49 @@ function stopLastUpdatedTicker() {
   if (lastUpdatedTimer) { clearInterval(lastUpdatedTimer); lastUpdatedTimer = null; }
 }
 
+/* ============================================================
+   SSE — real-time push from server (/api/events)
+   game_start  -> run alarm check immediately
+   quarter_start -> refresh game data
+   ============================================================ */
+let _sseSource = null;
+
+function startSSEListener() {
+  if (_sseSource) return; // already connected
+  if (typeof EventSource === "undefined") {
+    console.warn("[sse] EventSource not supported in this environment");
+    return;
+  }
+  _sseSource = new EventSource(API_BASE + "/api/events");
+
+  _sseSource.addEventListener("game_start", (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      console.log("[sse] game_start", d.gameId, d.sport, d.teams);
+      checkAlarmsAgainstGames();
+    } catch (err) { console.warn("[sse] game_start parse error", err); }
+  });
+
+  _sseSource.addEventListener("quarter_start", (e) => {
+    try {
+      const d = JSON.parse(e.data);
+      console.log("[sse] quarter_start", d.gameId, "period", d.period);
+      fetchAllGames(false);
+    } catch (err) { console.warn("[sse] quarter_start parse error", err); }
+  });
+
+  _sseSource.onerror = () => {
+    console.warn("[sse] connection error — will auto-reconnect");
+    // EventSource reconnects automatically; reset ref if closed
+    if (_sseSource.readyState === EventSource.CLOSED) {
+      _sseSource = null;
+      setTimeout(startSSEListener, 5000);
+    }
+  };
+
+  console.log("[sse] Listening on", API_BASE + "/api/events");
+}
+
 
 /* ============================================================
    PERIOD OPTIONS — sport-aware
@@ -2003,16 +2049,19 @@ function confirmPeriodAlarm() {
 
   let added = 0;
 
+  const gameTime    = game ? game.scheduledLocal : null;
+  const gameTimeRaw = game ? game.scheduledRaw   : null;
+
   if (doGameStart) {
-    addAlarmWithPeriods('gamestart', { team: gameLabel, periods: [], periodLabels: [] });
+    addAlarmWithPeriods('gamestart', { team: gameLabel, periods: [], periodLabels: [], gameTime, gameTimeRaw });
     added++;
   }
   if (doPeriod) {
-    addAlarmWithPeriods('period', { team: gameLabel, periods, periodLabels, periodShort });
+    addAlarmWithPeriods('period', { team: gameLabel, periods, periodLabels, periodShort, gameTime, gameTimeRaw });
     added++;
   }
   if (doOT) {
-    addAlarmWithPeriods('ot', { team: gameLabel, periods: [], periodLabels: [] });
+    addAlarmWithPeriods('ot', { team: gameLabel, periods: [], periodLabels: [], gameTime, gameTimeRaw });
     added++;
   }
 
@@ -2093,9 +2142,9 @@ function renderAlarmList() {
 
     // Sub-label
     let subLabel = '';
-    if (alarm.type === 'period' && alarm.team) subLabel = '⏱️ Period alarm';
-    else if (alarm.type === 'gamestart' && alarm.team) subLabel = '🏁 Game start/end alarm';
-    else if (alarm.type === 'ot' && alarm.team) subLabel = '⚡ Overtime alarm';
+    if (alarm.type === 'period' && alarm.team) subLabel = alarm.gameTime ? '⏱️ ' + alarm.gameTime : '⏱️ Period alarm';
+    else if (alarm.type === 'gamestart' && alarm.team) subLabel = alarm.gameTime ? '🏁 ' + alarm.gameTime : '🏁 Game start/end alarm';
+    else if (alarm.type === 'ot' && alarm.team) subLabel = alarm.gameTime ? '⚡ ' + alarm.gameTime : '⚡ Overtime alarm';
 
     div.innerHTML = `
       <div class="alarm-item-icon" style="background:${tmeta.color}22">${tmeta.icon}</div>
