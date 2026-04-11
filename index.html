@@ -1977,8 +1977,11 @@ function buildPeriodPills(sport) {
    ============================================================ */
 function periodOrdinal(periodId, sport) {
   // Returns 1-based ordinal for comparison
-  if (periodId === 'OT' || periodId === 'ET' || periodId === 'EX' || periodId === 'PK') {
+  if (periodId === 'OT' || periodId === 'ET' || periodId === 'EX') {
     return 99; // always "last"
+  }
+  if (periodId === 'PK') {
+    return 5; // penalty shootout = period 5 (matches server.js PK override)
   }
   const num = parseInt(periodId.replace(/\D/g, ''), 10);
   return isNaN(num) ? 99 : num;
