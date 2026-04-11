@@ -688,8 +688,7 @@ body {
       <div id="sheetBulkSportRow" style="display:none;margin-bottom:12px;">
         <div class="sheet-section-label" style="margin-bottom:6px;">Sport</div>
         <div class="games-sport-filters" id="bulkSportPills" style="flex-wrap:wrap;gap:6px;">
-          <button class="sport-pill active" data-bulk-sport="ALL"  onclick="setBulkSport(this)">All</button>
-          <button class="sport-pill"        data-bulk-sport="NBA"  onclick="setBulkSport(this)">🏀 NBA</button>
+          <button class="sport-pill active" data-bulk-sport="NBA"  onclick="setBulkSport(this)">🏀 NBA</button>
           <button class="sport-pill"        data-bulk-sport="NHL"  onclick="setBulkSport(this)">🏒 NHL</button>
           <button class="sport-pill"        data-bulk-sport="MLB"  onclick="setBulkSport(this)">⚾ MLB</button>
           <button class="sport-pill"        data-bulk-sport="MLS"  onclick="setBulkSport(this)">⚽ MLS</button>
@@ -1920,11 +1919,9 @@ function openBulkAlarmModal() {
   modalState.selectedPeriods = [];
   modalState.currentPeriodNum = 0;
 
-  // Detect currently active sport filter pill
+  // Detect currently active sport filter pill; default to NBA if ALL or unset
   const activeFilter = document.querySelector('#gamesSportFilters .sport-pill.active');
-  const activeSport = activeFilter ? activeFilter.dataset.sport : 'ALL';
-
-  // Default to first real sport if ALL (for period pills we need a concrete sport)
+  const activeSport = activeFilter ? activeFilter.dataset.sport : 'NBA';
   const defaultSport = (activeSport && activeSport !== 'ALL') ? activeSport : 'NBA';
   modalState.sport = defaultSport;
 
@@ -1932,15 +1929,10 @@ function openBulkAlarmModal() {
   const bulkRow = document.getElementById('sheetBulkSportRow');
   bulkRow.style.display = 'block';
 
-  // Activate the matching pill (or ALL)
+  // Activate the matching pill (NBA if main filter was ALL)
   document.querySelectorAll('#bulkSportPills .sport-pill').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.bulkSport === activeSport);
+    btn.classList.toggle('active', btn.dataset.bulkSport === defaultSport);
   });
-
-  // If filter was ALL, still show ALL active but use NBA for period pills
-  if (activeSport === 'ALL') {
-    // ALL pill already marked active above
-  }
 
   // Hide game context banner
   document.getElementById('sheetGameCtx').style.display = 'none';
@@ -1974,24 +1966,22 @@ function setBulkSport(btn) {
   btn.classList.add('active');
 
   const sport = btn.dataset.bulkSport;
-  // For period pills we need a concrete sport; fall back to NBA when ALL
-  const concreteSport = (sport && sport !== 'ALL') ? sport : 'NBA';
-  modalState.sport = concreteSport;
+  modalState.sport = sport;
   modalState.selectedPeriods = [];
 
   // Update labels
   document.getElementById('sheetPeriodSectionLabel').textContent =
-    PERIOD_SECTION_LABEL[concreteSport] || 'Select Period(s)';
+    PERIOD_SECTION_LABEL[sport] || 'Select Period(s)';
   document.getElementById('sheetPeriodToggleLabel').textContent =
-    SPORT_META[concreteSport]?.periodLabel || 'Period Start';
+    SPORT_META[sport]?.periodLabel || 'Period Start';
 
-  buildPeriodPills(concreteSport);
+  buildPeriodPills(sport);
   updateAlarmSummary();
 }
 
 function confirmBulkAlarm() {
   const bulkActivePill = document.querySelector('#bulkSportPills .sport-pill.active');
-  const selectedSport  = bulkActivePill ? bulkActivePill.dataset.bulkSport : 'ALL';
+  const selectedSport  = bulkActivePill ? bulkActivePill.dataset.bulkSport : 'NBA';
 
   const sport   = modalState.sport; // concrete sport used for period pills / labels
   const periods = modalState.selectedPeriods;
@@ -2019,13 +2009,11 @@ function confirmBulkAlarm() {
     ...(gamesData.upcoming || []),
     ...(gamesData.final    || [])
   ];
-  const targetGames = selectedSport === 'ALL'
-    ? allGames
-    : allGames.filter(g => (g.sport || '').toUpperCase() === selectedSport);
+  const targetGames = allGames.filter(g => (g.sport || '').toUpperCase() === selectedSport);
 
   if (targetGames.length === 0) {
     showToast('ℹ️', 'No games found',
-      selectedSport === 'ALL' ? 'No games available right now.' : `No ${selectedSport} games available.`,
+      `No ${selectedSport} games available.`,
       'var(--text2)');
     closePeriodModal();
     return;
@@ -2050,9 +2038,8 @@ function confirmBulkAlarm() {
       }
     }
     if (doPeriod) {
-      // Only apply specific period filters when a concrete sport was selected (not ALL)
-      const effectivePeriods      = selectedSport === 'ALL' ? [] : periods;
-      const effectivePeriodLabels = selectedSport === 'ALL' ? ['All periods'] : periodLabels;
+      const effectivePeriods      = periods;
+      const effectivePeriodLabels = periodLabels;
       addAlarmWithPeriods('period', {
         team: gameLabel, periods: effectivePeriods,
         periodLabels: effectivePeriodLabels, periodShort, gameTime, gameTimeRaw
@@ -2068,7 +2055,7 @@ function confirmBulkAlarm() {
   // Restore modalState.sport to the concrete sport used in the sheet
   modalState.sport = sport;
 
-  const sportLabel = selectedSport === 'ALL' ? 'all sports' : selectedSport;
+  const sportLabel = selectedSport;
   showToast('🔔', 'Bulk Alarms Set!',
     `${alarmsAdded} alarm${alarmsAdded !== 1 ? 's' : ''} set for ${targetGames.length} ${sportLabel} game${targetGames.length !== 1 ? 's' : ''}.`,
     'var(--green)');
