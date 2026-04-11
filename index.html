@@ -684,6 +684,19 @@ body {
         </div>
       </div>
 
+      <!-- Bulk sport selector (shown only in bulk mode) -->
+      <div id="sheetBulkSportRow" style="display:none;margin-bottom:12px;">
+        <div class="sheet-section-label" style="margin-bottom:6px;">Sport</div>
+        <div class="games-sport-filters" id="bulkSportPills" style="flex-wrap:wrap;gap:6px;">
+          <button class="sport-pill active" data-bulk-sport="ALL"  onclick="setBulkSport(this)">All</button>
+          <button class="sport-pill"        data-bulk-sport="NBA"  onclick="setBulkSport(this)">🏀 NBA</button>
+          <button class="sport-pill"        data-bulk-sport="NHL"  onclick="setBulkSport(this)">🏒 NHL</button>
+          <button class="sport-pill"        data-bulk-sport="MLB"  onclick="setBulkSport(this)">⚾ MLB</button>
+          <button class="sport-pill"        data-bulk-sport="MLS"  onclick="setBulkSport(this)">⚽ MLS</button>
+          <button class="sport-pill"        data-bulk-sport="NFL"  onclick="setBulkSport(this)">🏈 NFL</button>
+        </div>
+      </div>
+
       <!-- Period / Quarter picker -->
       <div class="sheet-section-label" id="sheetPeriodSectionLabel">Select Quarter(s)</div>
       <div class="period-pill-group" id="periodPillGroup"></div>
@@ -838,6 +851,11 @@ body {
       <button class="sport-pill" data-sport="MLS"  onclick="setGamesSportFilter(this)">⚽ MLS</button>
 
     </div>
+
+    <!-- Bulk alarm button -->
+    <button class="sheet-confirm-btn" style="margin-top:12px;margin-bottom:4px;" onclick="openBulkAlarmModal()">
+      🔔 Activate All Alarms
+    </button>
 
     <!-- Last updated timestamp -->
     <div id="gamesLastUpdatedBar" style="font-size:0.72rem;color:var(--text2);margin-bottom:10px;display:none">
@@ -1890,6 +1908,176 @@ const PERIOD_SECTION_LABEL = {
 };
 
 /* ============================================================
+   BULK ALARM MODE
+   ============================================================ */
+let isBulkAlarmMode = false;
+
+function openBulkAlarmModal() {
+  isBulkAlarmMode = true;
+
+  // Reset modal state — no specific game
+  modalState.game = null;
+  modalState.selectedPeriods = [];
+  modalState.currentPeriodNum = 0;
+
+  // Detect currently active sport filter pill
+  const activeFilter = document.querySelector('#gamesSportFilters .sport-pill.active');
+  const activeSport = activeFilter ? activeFilter.dataset.sport : 'ALL';
+
+  // Default to first real sport if ALL (for period pills we need a concrete sport)
+  const defaultSport = (activeSport && activeSport !== 'ALL') ? activeSport : 'NBA';
+  modalState.sport = defaultSport;
+
+  // --- Sport selector pills ---
+  const bulkRow = document.getElementById('sheetBulkSportRow');
+  bulkRow.style.display = 'block';
+
+  // Activate the matching pill (or ALL)
+  document.querySelectorAll('#bulkSportPills .sport-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.bulkSport === activeSport);
+  });
+
+  // If filter was ALL, still show ALL active but use NBA for period pills
+  if (activeSport === 'ALL') {
+    // ALL pill already marked active above
+  }
+
+  // Hide game context banner
+  document.getElementById('sheetGameCtx').style.display = 'none';
+
+  // Set period section label + toggle label for the selected sport
+  document.getElementById('sheetPeriodSectionLabel').textContent =
+    PERIOD_SECTION_LABEL[defaultSport] || 'Select Period(s)';
+  document.getElementById('sheetPeriodToggleLabel').textContent =
+    SPORT_META[defaultSport]?.periodLabel || 'Period Start';
+
+  // Build period pills for the default sport
+  buildPeriodPills(defaultSport);
+
+  // Update title
+  document.querySelector('.sheet-title').textContent = '🔔 Bulk Alarm';
+
+  // Wire confirm button to bulk handler
+  document.getElementById('sheetConfirmBtn').onclick = confirmBulkAlarm;
+
+  // Update summary
+  updateAlarmSummary();
+
+  // Open sheet
+  document.getElementById('periodModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function setBulkSport(btn) {
+  // Toggle active pill
+  document.querySelectorAll('#bulkSportPills .sport-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const sport = btn.dataset.bulkSport;
+  // For period pills we need a concrete sport; fall back to NBA when ALL
+  const concreteSport = (sport && sport !== 'ALL') ? sport : 'NBA';
+  modalState.sport = concreteSport;
+  modalState.selectedPeriods = [];
+
+  // Update labels
+  document.getElementById('sheetPeriodSectionLabel').textContent =
+    PERIOD_SECTION_LABEL[concreteSport] || 'Select Period(s)';
+  document.getElementById('sheetPeriodToggleLabel').textContent =
+    SPORT_META[concreteSport]?.periodLabel || 'Period Start';
+
+  buildPeriodPills(concreteSport);
+  updateAlarmSummary();
+}
+
+function confirmBulkAlarm() {
+  const bulkActivePill = document.querySelector('#bulkSportPills .sport-pill.active');
+  const selectedSport  = bulkActivePill ? bulkActivePill.dataset.bulkSport : 'ALL';
+
+  const sport   = modalState.sport; // concrete sport used for period pills / labels
+  const periods = modalState.selectedPeriods;
+  const options = PERIOD_OPTIONS[sport] || [];
+
+  const doGameStart = document.getElementById('sheet-toggle-gamestart').checked;
+  const doPeriod    = document.getElementById('sheet-toggle-period').checked || periods.length > 0;
+  const doOT        = document.getElementById('sheet-toggle-ot').checked;
+
+  if (!doGameStart && !doPeriod && !doOT) {
+    showToast('⚠️', 'No alarm types selected', 'Pick at least one alarm type.', 'var(--yellow, #f5a623)');
+    return;
+  }
+
+  const periodLabels = periods.length > 0
+    ? periods.map(id => (options.find(o => o.id === id)?.fullLabel || id))
+    : ['All periods'];
+  const periodShort = periods.length > 0
+    ? periods.map(id => (options.find(o => o.id === id)?.label || id)).join(', ')
+    : null;
+
+  // Collect all games, filter by selected sport
+  const allGames = [
+    ...(gamesData.live     || []),
+    ...(gamesData.upcoming || []),
+    ...(gamesData.final    || [])
+  ];
+  const targetGames = selectedSport === 'ALL'
+    ? allGames
+    : allGames.filter(g => (g.sport || '').toUpperCase() === selectedSport);
+
+  if (targetGames.length === 0) {
+    showToast('ℹ️', 'No games found',
+      selectedSport === 'ALL' ? 'No games available right now.' : `No ${selectedSport} games available.`,
+      'var(--text2)');
+    closePeriodModal();
+    return;
+  }
+
+  let alarmsAdded = 0;
+
+  targetGames.forEach(game => {
+    // Temporarily set modalState to this game's sport so addAlarmWithPeriods() picks up the right icon
+    const gameSport = (game.sport || sport).toUpperCase();
+    modalState.sport = gameSport;
+
+    const gameLabel   = game.awayName + ' vs ' + game.homeName;
+    const gameTime    = game.scheduledLocal || null;
+    const gameTimeRaw = game.scheduledRaw   || null;
+
+    if (doGameStart) {
+      addAlarmWithPeriods('gamestart', { team: gameLabel, periods: [], periodLabels: [], gameTime, gameTimeRaw });
+      alarmsAdded++;
+      if (gameTimeRaw && gameTimeRaw > Date.now()) {
+        scheduleGameStartAlarm(alarms[alarms.length - 1]);
+      }
+    }
+    if (doPeriod) {
+      // Only apply specific period filters when a concrete sport was selected (not ALL)
+      const effectivePeriods      = selectedSport === 'ALL' ? [] : periods;
+      const effectivePeriodLabels = selectedSport === 'ALL' ? ['All periods'] : periodLabels;
+      addAlarmWithPeriods('period', {
+        team: gameLabel, periods: effectivePeriods,
+        periodLabels: effectivePeriodLabels, periodShort, gameTime, gameTimeRaw
+      });
+      alarmsAdded++;
+    }
+    if (doOT) {
+      addAlarmWithPeriods('ot', { team: gameLabel, periods: [], periodLabels: [], gameTime, gameTimeRaw });
+      alarmsAdded++;
+    }
+  });
+
+  // Restore modalState.sport to the concrete sport used in the sheet
+  modalState.sport = sport;
+
+  const sportLabel = selectedSport === 'ALL' ? 'all sports' : selectedSport;
+  showToast('🔔', 'Bulk Alarms Set!',
+    `${alarmsAdded} alarm${alarmsAdded !== 1 ? 's' : ''} set for ${targetGames.length} ${sportLabel} game${targetGames.length !== 1 ? 's' : ''}.`,
+    'var(--green)');
+
+  closePeriodModal();
+  switchTab('alarms');
+}
+
+/* ============================================================
    PERIOD MODAL STATE
    ============================================================ */
 let modalState = {
@@ -1942,6 +2130,14 @@ function openPeriodModal(sport, game) {
 function closePeriodModal() {
   document.getElementById('periodModal').classList.remove('open');
   document.body.style.overflow = '';
+  // Restore single-game mode when sheet closes
+  if (isBulkAlarmMode) {
+    isBulkAlarmMode = false;
+    document.getElementById('sheetBulkSportRow').style.display = 'none';
+    document.getElementById('sheetGameCtx').style.display = 'none';
+    document.getElementById('sheetConfirmBtn').onclick = confirmPeriodAlarm;
+    document.querySelector('.sheet-title').textContent = '🔔 Set Alarm';
+  }
 }
 
 function handleModalOverlayClick(e) {
