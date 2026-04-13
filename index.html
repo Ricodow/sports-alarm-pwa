@@ -3133,74 +3133,49 @@ function renderFavoritesPicker() {
   const clearBtn = document.getElementById('clearFavoritesBtn');
   if (!container) return;
 
-  if (favoriteTeams.length === 0) {
-    container.innerHTML = '';
-    // Build default picker (no teams selected)
-    let html = '';
-    Object.entries(ALL_TEAMS).forEach(([league, teams]) => {
-      const meta = LEAGUE_META[league];
-      if (!meta) return;
-      html += `
-        <div class="fav-sport-section open" data-league="${league}">
-          <button class="fav-sport-header" onclick="this.parentElement.classList.toggle('open')">
-            <span class="fav-sport-emoji">${meta.emoji}</span>
-            <span class="fav-sport-name">${meta.label}</span>
-            <span class="fav-sport-count">${teams.length} teams</span>
-            <span class="fav-sport-chevron">&#9660;</span>
-          </button>
-          <div class="fav-teams-grid">
-            ${teams.map(t => {
-              const sel = isFavorite(league, t.abbr);
-              const txtCol = contrastColor(t.color);
-              return `
-                <button class="fav-team-btn${sel ? ' selected' : ''}"
-                  onclick="toggleFavorite('${league}','${t.abbr}'); this.classList.toggle('selected');">
-                  <span class="fav-team-logo" style="background:${t.color};color:${txtCol}">${t.abbr}</span>
-                  <span>${t.name}</span>
-                  <span class="fav-team-check">✓</span>
-                </button>`;
-            }).join('')}
-          </div>
-        </div>`;
-    });
-    container.innerHTML = html;
-    emptyEl.style.display = 'block';
-    clearBtn.style.display = 'none';
-  } else {
-    // Show sections with at least one selected team expanded + all teams
-    let html = '';
-    Object.entries(ALL_TEAMS).forEach(([league, teams]) => {
-      const meta = LEAGUE_META[league];
-      if (!meta) return;
-      const selCount = teams.filter(t => isFavorite(league, t.abbr)).length;
-      if (selCount === 0) return; // skip leagues with no favorites
-      html += `
-        <div class="fav-sport-section open" data-league="${league}">
-          <button class="fav-sport-header" onclick="this.parentElement.classList.toggle('open')">
-            <span class="fav-sport-emoji">${meta.emoji}</span>
-            <span class="fav-sport-name">${meta.label}</span>
-            <span class="fav-sport-count">${selCount} selected</span>
-            <span class="fav-sport-chevron">&#9660;</span>
-          </button>
-          <div class="fav-teams-grid">
-            ${teams.map(t => {
-              const sel = isFavorite(league, t.abbr);
-              const txtCol = contrastColor(t.color);
-              return `
-                <button class="fav-team-btn${sel ? ' selected' : ''}"
-                  onclick="toggleFavorite('${league}','${t.abbr}'); this.classList.toggle('selected');">
-                  <span class="fav-team-logo" style="background:${t.color};color:${txtCol}">${t.abbr}</span>
-                  <span>${t.name}</span>
-                  <span class="fav-team-check">✓</span>
-                </button>`;
-            }).join('')}
-          </div>
-        </div>`;
-    });
-    container.innerHTML = html;
-    emptyEl.style.display = 'none';
-    clearBtn.style.display = '';
-  }
+  // Always render ALL leagues — never hide ones with 0 selections
+  let html = '';
+  let totalSelected = 0;
+
+  Object.entries(ALL_TEAMS).forEach(([league, teams]) => {
+    const meta = LEAGUE_META[league];
+    if (!meta) return;
+    const selCount = teams.filter(t => isFavorite(league, t.abbr)).length;
+    totalSelected += selCount;
+    html += `
+      <div class="fav-sport-section open" data-league="${league}">
+        <button class="fav-sport-header" onclick="this.parentElement.classList.toggle('open')">
+          <span class="fav-sport-emoji">${meta.emoji}</span>
+          <span class="fav-sport-name">${meta.label}</span>
+          <span class="fav-sport-count">${selCount} / ${teams.length}</span>
+          <span class="fav-sport-chevron">&#9660;</span>
+        </button>
+        <div class="fav-teams-grid">
+          ${teams.map(t => {
+            const sel = isFavorite(league, t.abbr);
+            const txtCol = contrastColor(t.color);
+            return `
+              <button class="fav-team-btn${sel ? ' selected' : ''}"
+                onclick="handleFavClick(event, '${league}','${t.abbr}')">
+                <span class="fav-team-logo" style="background:${t.color};color:${txtCol}">${t.abbr}</span>
+                <span>${t.name}</span>
+                <span class="fav-team-check">&#10003;</span>
+              </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  emptyEl.style.display = totalSelected === 0 ? 'block' : 'none';
+  clearBtn.style.display = totalSelected === 0 ? 'none' : '';
+}
+
+// Dedicated click handler — toggles state, THEN re-renders
+function handleFavClick(event, league, abbr) {
+  event.preventDefault();
+  event.stopPropagation();
+  toggleFavorite(league, abbr);
 }
 
 /* Check if a game involves any favorite team */
