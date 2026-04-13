@@ -842,12 +842,12 @@ body {
 
     <!-- Sport filter pills -->
     <div class="games-sport-filters" id="gamesSportFilters">
-      <button class="sport-pill active" data-sport="ALL" onclick="setGamesSportFilter(this)">All</button>
-      <button class="sport-pill" data-sport="NFL"  onclick="setGamesSportFilter(this)">🏈 NFL</button>
-      <button class="sport-pill" data-sport="NBA"  onclick="setGamesSportFilter(this)">🏀 NBA</button>
-      <button class="sport-pill" data-sport="MLB"  onclick="setGamesSportFilter(this)">⚾ MLB</button>
-      <button class="sport-pill" data-sport="NHL"  onclick="setGamesSportFilter(this)">🏒 NHL</button>
-      <button class="sport-pill" data-sport="MLS"  onclick="setGamesSportFilter(this)">⚽ MLS</button>
+      <button class="sport-pill active" data-sport="ALL" onclick="setGamesSportFilter(this)">All <span class="count-badge" data-count-sport="ALL" style="display:none">0</span></button>
+      <button class="sport-pill" data-sport="NFL"  onclick="setGamesSportFilter(this)">🏈 NFL <span class="count-badge" data-count-sport="NFL" style="display:none">0</span></button>
+      <button class="sport-pill" data-sport="NBA"  onclick="setGamesSportFilter(this)">🏀 NBA <span class="count-badge" data-count-sport="NBA" style="display:none">0</span></button>
+      <button class="sport-pill" data-sport="MLB"  onclick="setGamesSportFilter(this)">⚾ MLB <span class="count-badge" data-count-sport="MLB" style="display:none">0</span></button>
+      <button class="sport-pill" data-sport="NHL"  onclick="setGamesSportFilter(this)">🏒 NHL <span class="count-badge" data-count-sport="NHL" style="display:none">0</span></button>
+      <button class="sport-pill" data-sport="MLS"  onclick="setGamesSportFilter(this)">⚽ MLS <span class="count-badge" data-count-sport="MLS" style="display:none">0</span></button>
 
     </div>
 
@@ -1500,6 +1500,7 @@ function filterGames(games) {
 
 /* Render all game panels */
 function renderGames() {
+  updateLiveGameCounts();
   renderLiveGames();
   renderUpcomingGames();
 }
@@ -1613,6 +1614,31 @@ function setGamesSportFilter(el) {
   el.classList.add('active');
   gamesSportFilter = el.dataset.sport;
   renderGames();
+}
+
+/* Update live game count badges on sport filter pills */
+function updateLiveGameCounts() {
+  const liveGames = gamesData.live || [];
+  // Count per sport
+  const sportCounts = {};
+  liveGames.forEach(g => {
+    const s = g.sport || '';
+    sportCounts[s] = (sportCounts[s] || 0) + 1;
+  });
+  const totalCount = liveGames.length;
+
+  const SUPPORTED = ['ALL', 'NFL', 'NBA', 'MLB', 'NHL', 'MLS'];
+  SUPPORTED.forEach(sport => {
+    const badge = document.querySelector(`.count-badge[data-count-sport="${sport}"]`);
+    if (!badge) return;
+    const count = sport === 'ALL' ? totalCount : (sportCounts[sport] || 0);
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  });
 }
 
 
