@@ -339,6 +339,89 @@ body {
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
+
+/* ============================================================
+   FAVORITES TAB
+   ============================================================ */
+.fav-sport-section { margin-bottom: 16px; }
+.fav-sport-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; cursor: pointer; user-select: none;
+  border: none; background: none; width: 100%; text-align: left; color: var(--text);
+}
+.fav-sport-header:hover { opacity: 0.85; }
+.fav-sport-emoji { font-size: 1.1rem; }
+.fav-sport-name { font-size: 0.85rem; font-weight: 700; }
+.fav-sport-count { font-size: 0.7rem; color: var(--text2); }
+.fav-sport-chevron { font-size: 0.7rem; color: var(--text2); transition: transform 0.2s; margin-left: auto; }
+.fav-sport-section.open .fav-sport-chevron { transform: rotate(180deg); }
+.fav-teams-grid {
+  display: none; flex-wrap: wrap; gap: 8px; padding: 8px 0 4px;
+}
+.fav-sport-section.open .fav-teams-grid { display: flex; }
+
+.fav-team-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg3); border: 2px solid var(--border);
+  border-radius: 20px; padding: 5px 12px 5px 8px;
+  cursor: pointer; transition: all 0.2s; color: var(--text);
+  font-size: 0.75rem; font-weight: 600;
+}
+.fav-team-btn:hover { border-color: var(--accent); }
+.fav-team-btn.selected {
+  background: rgba(0,212,255,0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(0,212,255,0.2);
+}
+.fav-team-logo {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.55rem; font-weight: 900; flex-shrink: 0;
+  color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.fav-team-check { display: none; color: var(--accent); font-weight: 900; }
+.fav-team-btn.selected .fav-team-check { display: inline; }
+
+.fav-empty {
+  text-align: center; padding: 30px 16px;
+  color: var(--text2); font-size: 0.85rem;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 12px;
+}
+.fav-empty .fav-empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+/* Favorite game highlight */
+.game-card.is-favorite {
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(135deg, var(--bg2), rgba(0,212,255,0.04));
+}
+.favorite-star {
+  display: inline-block; color: var(--yellow);
+  font-size: 0.75rem; margin-right: 4px; animation: starPulse 2s infinite;
+}
+@keyframes starPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* Favorites filter row in Games tab */
+.fav-filter-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; padding: 6px 0;
+}
+.fav-filter-toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.75rem; font-weight: 600; color: var(--text2);
+  cursor: pointer; user-select: none;
+}
+.fav-filter-toggle input { display: none; }
+.fav-filter-icon { font-size: 0.9rem; }
+.fav-filter-count {
+  background: var(--yellow); color: #000;
+  font-size: 0.6rem; font-weight: 800;
+  border-radius: 8px; padding: 1px 6px;
+}
+
 /* ============================================================
    MISC
    ============================================================ */
@@ -764,6 +847,7 @@ body {
     <button class="tab-btn" onclick="switchTab('games')">Games</button>
     <button class="tab-btn" onclick="switchTab('history')">History</button>
     <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+    <button class="tab-btn" onclick="switchTab('favorites')">Favorites</button>
   </div>
 
 
@@ -848,7 +932,7 @@ body {
       <button class="sport-pill" data-sport="MLB"  onclick="setGamesSportFilter(this)">⚾ MLB <span class="count-badge" data-count-sport="MLB" style="display:none">0</span></button>
       <button class="sport-pill" data-sport="NHL"  onclick="setGamesSportFilter(this)">🏒 NHL <span class="count-badge" data-count-sport="NHL" style="display:none">0</span></button>
       <button class="sport-pill" data-sport="MLS"  onclick="setGamesSportFilter(this)">⚽ MLS <span class="count-badge" data-count-sport="MLS" style="display:none">0</span></button>
-
+      <button class="sport-pill" data-sport="FAVORITES" id="favPill" onclick="setGamesSportFilter(this)" style="display:none">⭐ Favorites <span class="fav-filter-count" id="favPillCount">0</span></button>
     </div>
 
     <!-- Bulk alarm button -->
@@ -888,6 +972,23 @@ body {
       </div>
     </div>
 
+  </div>
+
+  <!-- ==================== FAVORITES TAB ==================== -->
+  <div class="tab-panel" id="tab-favorites">
+    <div class="section-label">Pick Your Teams</div>
+    <div id="favoritesTeamPicker">
+      <div class="games-spinner">
+        <div class="spinner-ring"></div>
+        <span>Loading teams...</span>
+      </div>
+    </div>
+    <div id="favoritesEmpty" class="fav-empty" style="display:none">
+      <div class="fav-empty-icon">⭐</div>
+      <div>No favorite teams selected yet.</div>
+      <div style="margin-top:6px;font-size:0.78rem">Pick teams above to see their games highlighted.</div>
+    </div>
+    <button class="clear-history-btn" id="clearFavoritesBtn" style="display:none" onclick="clearFavorites()">Clear All Favorites</button>
   </div>
 
 </main>
@@ -969,13 +1070,16 @@ function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch(() => {});
   }
+
+  // Init favorites system
+  updateFavPillVisibility();
 }
 
 /* ============================================================
    TABS
    ============================================================ */
 function switchTab(name) {
-  const TAB_ORDER = ['alarms','games','history','settings'];
+  const TAB_ORDER = ['alarms','games','history','settings','favorites'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
     b.classList.toggle('active', TAB_ORDER[i] === name);
   });
@@ -988,6 +1092,11 @@ function switchTab(name) {
     if (gamesLastFetch === 0) fetchAllGames(true);
     else { renderGames(); if (gamesLastUpdated) startLastUpdatedTicker(); }
     startGamesAutoRefresh();
+  } else if (name === 'favorites') {
+    renderFavoritesPicker();
+    stopGamesAutoRefresh();
+    startGamesAutoRefresh();
+    stopLastUpdatedTicker();
   } else {
     stopGamesAutoRefresh();
     startGamesAutoRefresh();
@@ -1555,9 +1664,9 @@ function buildLiveCard(g) {
   const homeWin = g.homeScore > g.awayScore;
   const awayWin = g.awayScore > g.homeScore;
   return `
-    <div class="game-card live-card">
+    <div class="game-card live-card${gameHasFavorite(g) ? ' is-favorite' : ''}">
       <div class="game-card-top">
-        <div class="game-sport-icon">${g.icon}</div>
+        <div class="game-sport-icon">${gameHasFavorite(g) ? '<span class="favorite-star">★</span>' : ''}${g.icon}</div>
         <div class="game-teams">
           <div class="game-matchup">${g.awayName} vs ${g.homeName}</div>
           <div class="game-meta">${g.sport}${g.venue ? ' · ' + g.venue : ''}</div>
@@ -1590,9 +1699,9 @@ function buildLiveCard(g) {
 /* Build upcoming game card HTML */
 function buildUpcomingCard(g) {
   return `
-    <div class="game-card">
+    <div class="game-card${gameHasFavorite(g) ? ' is-favorite' : ''}">
       <div class="game-card-top">
-        <div class="game-sport-icon">${g.icon}</div>
+        <div class="game-sport-icon">${gameHasFavorite(g) ? '<span class="favorite-star">★</span>' : ''}${g.icon}</div>
         <div class="game-teams">
           <div class="game-matchup">${g.awayName} vs ${g.homeName}</div>
           <div class="game-meta">${g.sport}${g.venue ? ' · ' + g.venue : ''}</div>
@@ -2964,6 +3073,172 @@ function scheduleGameStartAlarm(alarm) {
       (alarm.team || sport) + ' is about to begin. Get ready!',
       sport, alarm.id);
   }, msUntilStart);
+}
+
+
+/* ============================================================
+   FAVORITES SYSTEM
+   ============================================================ */
+let favoriteTeams = JSON.parse(localStorage.getItem('sa_favorites') || '[]');
+let favFilterActive = false;
+
+const ALL_TEAMS = { ...TEAM_COLORS };
+
+function saveFavorites() {
+  localStorage.setItem('sa_favorites', JSON.stringify(favoriteTeams));
+  updateFavPillVisibility();
+  renderFavoritesPicker();
+}
+
+function toggleFavorite(league, abbr) {
+  const key = league + ':' + abbr;
+  const idx = favoriteTeams.indexOf(key);
+  if (idx === -1) {
+    favoriteTeams.push(key);
+  } else {
+    favoriteTeams.splice(idx, 1);
+  }
+  saveFavorites();
+}
+
+function isFavorite(league, abbr) {
+  return favoriteTeams.includes(league + ':' + abbr);
+}
+
+function clearFavorites() {
+  if (!confirm('Clear all favorite teams?')) return;
+  favoriteTeams = [];
+  saveFavorites();
+  if (favFilterActive) {
+    favFilterActive = false;
+    gamesSportFilter = 'ALL';
+    document.querySelectorAll('#gamesSportFilters .sport-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.sport === 'ALL');
+    });
+    renderGames();
+  }
+}
+
+function updateFavPillVisibility() {
+  const pill = document.getElementById('favPill');
+  const count = document.getElementById('favPillCount');
+  if (!pill) return;
+  pill.style.display = favoriteTeams.length > 0 ? '' : 'none';
+  if (count) count.textContent = favoriteTeams.length;
+}
+
+function renderFavoritesPicker() {
+  const container = document.getElementById('favoritesTeamPicker');
+  const emptyEl = document.getElementById('favoritesEmpty');
+  const clearBtn = document.getElementById('clearFavoritesBtn');
+  if (!container) return;
+
+  if (favoriteTeams.length === 0) {
+    container.innerHTML = '';
+    // Build default picker (no teams selected)
+    let html = '';
+    Object.entries(ALL_TEAMS).forEach(([league, teams]) => {
+      const meta = LEAGUE_META[league];
+      if (!meta) return;
+      html += `
+        <div class="fav-sport-section open" data-league="${league}">
+          <button class="fav-sport-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="fav-sport-emoji">${meta.emoji}</span>
+            <span class="fav-sport-name">${meta.label}</span>
+            <span class="fav-sport-count">${teams.length} teams</span>
+            <span class="fav-sport-chevron">&#9660;</span>
+          </button>
+          <div class="fav-teams-grid">
+            ${teams.map(t => {
+              const sel = isFavorite(league, t.abbr);
+              const txtCol = contrastColor(t.color);
+              return `
+                <button class="fav-team-btn${sel ? ' selected' : ''}"
+                  onclick="toggleFavorite('${league}','${t.abbr}'); this.classList.toggle('selected');">
+                  <span class="fav-team-logo" style="background:${t.color};color:${txtCol}">${t.abbr}</span>
+                  <span>${t.name}</span>
+                  <span class="fav-team-check">✓</span>
+                </button>`;
+            }).join('')}
+          </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+    emptyEl.style.display = 'block';
+    clearBtn.style.display = 'none';
+  } else {
+    // Show sections with at least one selected team expanded + all teams
+    let html = '';
+    Object.entries(ALL_TEAMS).forEach(([league, teams]) => {
+      const meta = LEAGUE_META[league];
+      if (!meta) return;
+      const selCount = teams.filter(t => isFavorite(league, t.abbr)).length;
+      if (selCount === 0) return; // skip leagues with no favorites
+      html += `
+        <div class="fav-sport-section open" data-league="${league}">
+          <button class="fav-sport-header" onclick="this.parentElement.classList.toggle('open')">
+            <span class="fav-sport-emoji">${meta.emoji}</span>
+            <span class="fav-sport-name">${meta.label}</span>
+            <span class="fav-sport-count">${selCount} selected</span>
+            <span class="fav-sport-chevron">&#9660;</span>
+          </button>
+          <div class="fav-teams-grid">
+            ${teams.map(t => {
+              const sel = isFavorite(league, t.abbr);
+              const txtCol = contrastColor(t.color);
+              return `
+                <button class="fav-team-btn${sel ? ' selected' : ''}"
+                  onclick="toggleFavorite('${league}','${t.abbr}'); this.classList.toggle('selected');">
+                  <span class="fav-team-logo" style="background:${t.color};color:${txtCol}">${t.abbr}</span>
+                  <span>${t.name}</span>
+                  <span class="fav-team-check">✓</span>
+                </button>`;
+            }).join('')}
+          </div>
+        </div>`;
+    });
+    container.innerHTML = html;
+    emptyEl.style.display = 'none';
+    clearBtn.style.display = '';
+  }
+}
+
+/* Check if a game involves any favorite team */
+function gameHasFavorite(g) {
+  if (!favoriteTeams.length) return false;
+  const abbrs = new Set();
+  if (g.awayAbbr) abbrs.add(g.awayAbbr);
+  if (g.homeAbbr) abbrs.add(g.homeAbbr);
+  // Also check full names
+  if (g.awayName && g.homeName) {
+    // Map from full name to abbr using TEAM_COLORS data
+  }
+  for (const key of favoriteTeams) {
+    const [league, abbr] = key.split(':');
+    if ((g.sport || '').toUpperCase() === league && abbrs.has(abbr)) return true;
+  }
+  return false;
+}
+
+/* Override filterGames to also support FAVORITES sport */
+const _origFilterGames = filterGames;
+filterGames = function(games) {
+  if (gamesSportFilter === 'FAVORITES') {
+    return games.filter(g => gameHasFavorite(g));
+  }
+  return _origFilterGames(games);
+};
+
+/* Mark fav filter active */
+const _origSetGamesSportFilter = setGamesSportFilter;
+setGamesSportFilter = function(el) {
+  favFilterActive = (el.dataset.sport === 'FAVORITES');
+  _origSetGamesSportFilter(el);
+};
+
+/* Enrich game cards with favorite styling */
+function addFavoriteStyling(g, cardClass) {
+  return gameHasFavorite(g) ? (cardClass + ' is-favorite') : cardClass;
 }
 
 /* ============================================================
