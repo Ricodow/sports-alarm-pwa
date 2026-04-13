@@ -997,7 +997,7 @@ body {
 /* ============================================================
    STATE
    ============================================================ */
-let currentSport = 'NFL';
+let currentSport = 'NFL'; // legacy; prefer modalState.sport
 let alarms = JSON.parse(localStorage.getItem('sa_alarms') || '[]');
 let history = JSON.parse(localStorage.getItem('sa_history') || '[]');
 let settings = JSON.parse(localStorage.getItem('sa_settings') || JSON.stringify({
@@ -1113,10 +1113,11 @@ function generateId() {
 }
 
 function addAlarm(type, extra = {}) {
-  const meta = SPORT_META[currentSport];
+  const sport = modalState.sport || currentSport;
+  const meta = SPORT_META[sport] || SPORT_META['NFL'];
   const alarm = {
     id: generateId(),
-    sport: currentSport,
+    sport,
     sportIcon: meta.icon,
     type,
     ...extra,
@@ -1127,7 +1128,7 @@ function addAlarm(type, extra = {}) {
   saveAlarms();
   renderAlarmList();
   updateAlarmCount();
-  showToast(ALARM_TYPE_META[type].icon, 'Alarm Added', `${meta.icon} ${currentSport} · ${ALARM_TYPE_META[type].label}${extra.threshold ? ' ≥ ' + extra.threshold : ''}${extra.team ? ': ' + extra.team : ''}`, 'var(--green)');
+  showToast(ALARM_TYPE_META[type].icon, 'Alarm Added', `${meta.icon} ${sport} · ${ALARM_TYPE_META[type].label}${extra.threshold ? ' ≥ ' + extra.threshold : ''}${extra.team ? ': ' + extra.team : ''}`, 'var(--green)');
 }
 
 
@@ -1690,7 +1691,7 @@ function buildLiveCard(g) {
           ${g.clock ? `<div class="game-time-remaining">${g.clock}</div>` : ''}
         </div>
       </div>
-      <button class="game-set-alarm-btn" onclick="prefillAlarmFromGame(${JSON.stringify(g).replace(/"/g, '&quot;')})">
+      <button class="game-set-alarm-btn" onclick="prefillAlarmFromGame(JSON.parse('${escAttr(JSON.stringify(g))}'))">
         🔔 Set Alarm
       </button>
     </div>`;
@@ -1711,7 +1712,7 @@ function buildUpcomingCard(g) {
       <div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px;padding:0 2px">
         📅 ${g.scheduledLocal || 'Time TBD'}
       </div>
-      <button class="game-set-alarm-btn" onclick="prefillAlarmFromGame(${JSON.stringify(g).replace(/"/g, '&quot;')})">
+      <button class="game-set-alarm-btn" onclick="prefillAlarmFromGame(JSON.parse('${escAttr(JSON.stringify(g))}'))">
         🔔 Set Alarm
       </button>
     </div>`;
@@ -2551,11 +2552,10 @@ function renderAlarmList() {
 }
 
 function prefillAlarmFromGame(game) {
-  // Normalise sport key
   const sportMap = { MLS: 'MLS', NCAAF: 'NCAAF', NCAAB: 'NCAAB' };
   const targetSport = sportMap[game.sport] || game.sport;
-  currentSport = targetSport;
-  // Open the period-picker modal
+  modalState.sport = targetSport;
+  currentSport = targetSport; // keep legacy var in sync
   openPeriodModal(targetSport, game);
 }
 
@@ -2571,6 +2571,16 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+/* Escape a value for safe use inside an onclick="..." attribute.
+   Handles: backslash → \\, double-quote → \&quot;, HTML angle brackets */
+function escAttr(str) {
+  return String(str || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 /* ============================================================
    ALARM CHECKING ENGINE
    Runs after every game data fetch. Evaluates each active alarm
@@ -2580,6 +2590,15 @@ function escHtml(str) {
 // Track what we've already fired to avoid duplicate alerts within a session
 // Key: alarmId + ':' + eventKey  →  true
 const firedAlarmEvents = {};
+const MAX_FIRED_EVENTS = 500;
+
+function pruneFiredEvents() {
+  const keys = Object.keys(firedAlarmEvents);
+  if (keys.length > MAX_FIRED_EVENTS) {
+    const removeCount = Math.floor(keys.length / 2);
+    for (let i = 0; i < removeCount; i++) delete firedAlarmEvents[keys[i]];
+  }
+}
 
 function alarmEventKey(alarm, game, extra) {
   // Build a unique key so the same alarm doesn't fire twice for the same event
@@ -2634,6 +2653,7 @@ function checkAlarmForGame(alarm, game) {
         const key = alarmEventKey(alarm, game, 'start');
         if (!firedAlarmEvents[key]) {
           firedAlarmEvents[key] = true;
+          pruneFiredEvents();
           fireAlarm('gamestart',
             SPORT_META[alarm.sport].icon + ' Game Started!',
             game.awayName + ' vs ' + game.homeName + ' is now live.',
@@ -2644,6 +2664,7 @@ function checkAlarmForGame(alarm, game) {
         const key = alarmEventKey(alarm, game, 'final');
         if (!firedAlarmEvents[key]) {
           firedAlarmEvents[key] = true;
+          pruneFiredEvents();
           const winner = game.homeScore > game.awayScore ? game.homeName : game.awayName;
           fireAlarm('gamestart',
             '🏁 Final Whistle!',
@@ -2671,6 +2692,7 @@ function checkAlarmForGame(alarm, game) {
       const key = alarmEventKey(alarm, game, cur);
       if (!firedAlarmEvents[key]) {
         firedAlarmEvents[key] = true;
+        pruneFiredEvents();
         const label = opt ? opt.fullLabel : ('Period ' + cur);
         fireAlarm('period',
           '⏱️ ' + label + ' Starting!',
@@ -2693,6 +2715,7 @@ function checkAlarmForGame(alarm, game) {
           const key = alarmEventKey(alarm, game, name + ':' + milestone);
           if (!firedAlarmEvents[key]) {
             firedAlarmEvents[key] = true;
+            pruneFiredEvents();
             fireAlarm('score',
               '🎯 Score Alert!',
               name + ' has reached ' + score + ' points in ' + game.awayName + ' vs ' + game.homeName,
@@ -2717,6 +2740,7 @@ function checkAlarmForGame(alarm, game) {
       const key = alarmEventKey(alarm, game, teamName + ':' + teamScore);
       if (!firedAlarmEvents[key]) {
         firedAlarmEvents[key] = true;
+        pruneFiredEvents();
         fireAlarm('team',
           '📣 ' + teamName + ' Scores!',
           teamName + ' now has ' + teamScore + ' points in ' + game.awayName + ' vs ' + game.homeName,
@@ -2733,6 +2757,7 @@ function checkAlarmForGame(alarm, game) {
         const key = alarmEventKey(alarm, game, 'ot');
         if (!firedAlarmEvents[key]) {
           firedAlarmEvents[key] = true;
+          pruneFiredEvents();
           fireAlarm('ot',
             '⚡ Overtime!',
             game.awayName + ' vs ' + game.homeName + ' is going to overtime!',
@@ -3178,15 +3203,42 @@ function handleFavClick(event, league, abbr) {
   toggleFavorite(league, abbr);
 }
 
+/* Build a reverse lookup: full team name → abbreviation, per league */
+const _teamNameToAbbr = {};
+(function buildTeamNameMap() {
+  Object.entries(TEAM_COLORS).forEach(([league, teams]) => {
+    _teamNameToAbbr[league] = {};
+    teams.forEach(({ abbr, name }) => {
+      _teamNameToAbbr[league][name.toLowerCase()] = abbr;
+    });
+  });
+})();
+
+function nameToAbbr(league, teamName) {
+  if (!teamName) return null;
+  const map = _teamNameToAbbr[league];
+  if (!map) return null;
+  const lower = teamName.toLowerCase();
+  if (map[lower]) return map[lower];
+  for (const [fullName, abbr] of Object.entries(map)) {
+    if (lower.includes(fullName) || fullName.includes(lower)) return abbr;
+  }
+  return null;
+}
+
 /* Check if a game involves any favorite team */
 function gameHasFavorite(g) {
   if (!favoriteTeams.length) return false;
   const abbrs = new Set();
   if (g.awayAbbr) abbrs.add(g.awayAbbr);
   if (g.homeAbbr) abbrs.add(g.homeAbbr);
-  // Also check full names
-  if (g.awayName && g.homeName) {
-    // Map from full name to abbr using TEAM_COLORS data
+  if (g.awayName && !g.awayAbbr) {
+    const abbr = nameToAbbr((g.sport || '').toUpperCase(), g.awayName);
+    if (abbr) abbrs.add(abbr);
+  }
+  if (g.homeName && !g.homeAbbr) {
+    const abbr = nameToAbbr((g.sport || '').toUpperCase(), g.homeName);
+    if (abbr) abbrs.add(abbr);
   }
   for (const key of favoriteTeams) {
     const [league, abbr] = key.split(':');
@@ -3210,11 +3262,6 @@ setGamesSportFilter = function(el) {
   favFilterActive = (el.dataset.sport === 'FAVORITES');
   _origSetGamesSportFilter(el);
 };
-
-/* Enrich game cards with favorite styling */
-function addFavoriteStyling(g, cardClass) {
-  return gameHasFavorite(g) ? (cardClass + ' is-favorite') : cardClass;
-}
 
 /* ============================================================
    BOOT
