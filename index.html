@@ -233,6 +233,64 @@ body {
 }
 
 /* ============================================================
+   SOUND CARD SELECTOR
+   ============================================================ */
+.sound-cards {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 4px;
+}
+.sound-card {
+  background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.sound-card:hover { border-color: rgba(0,212,255,0.35); background: rgba(0,212,255,0.04); }
+.sound-card.selected {
+  border-color: var(--accent);
+  background: rgba(0,212,255,0.06);
+  box-shadow: 0 0 12px rgba(0,212,255,0.15);
+}
+.sound-card-indicator {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--border); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s;
+}
+.sound-card.selected .sound-card-indicator {
+  border-color: var(--accent); background: var(--accent);
+}
+.sound-card-indicator-inner {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: transparent; transition: background 0.2s;
+}
+.sound-card.selected .sound-card-indicator-inner { background: #000; }
+.sound-card-info { flex: 1; }
+.sound-card-name {
+  font-size: 0.88rem; font-weight: 700; margin-bottom: 2px;
+}
+.sound-card-desc {
+  font-size: 0.73rem; color: var(--text2); line-height: 1.3;
+}
+.sound-preview-btn {
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--accent); font-size: 0.72rem; font-weight: 700;
+  padding: 6px 12px; border-radius: 20px; cursor: pointer;
+  white-space: nowrap; transition: all 0.2s; flex-shrink: 0;
+}
+.sound-preview-btn:hover {
+  background: var(--accent); color: #000; border-color: var(--accent);
+}
+.sound-preview-btn.playing {
+  background: var(--accent); color: #000; border-color: var(--accent);
+  animation: btn-pulse 1.5s infinite;
+}
+@keyframes btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,200,0,0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(255,200,0,0); }
+}
+
+/* ============================================================
    ACCENT COLOR PICKER
    ============================================================ */
 .color-swatch-row {
@@ -741,12 +799,97 @@ body {
 /* Period badge in alarm list */
 .badge-period { background: rgba(123,97,255,0.18); color: #a78bfa; }
 
+/* ============================================================
+   ALARM MODAL (push-triggered alarm popup)
+   ============================================================ */
+#alarmModal {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+#alarmModal.visible { opacity: 1; pointer-events: all; }
+.alarm-modal-card {
+  width: 90%; max-width: 380px;
+  background: linear-gradient(135deg, #0d1628, #111d33);
+  border: 1.5px solid var(--accent);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,212,255,0.35), 0 0 80px rgba(0,212,255,0.1);
+  transform: scale(0.9); transition: transform 0.25s cubic-bezier(0.34,1.2,0.64,1);
+}
+#alarmModal.visible .alarm-modal-card { transform: scale(1); }
+.alarm-modal-icon { font-size: 3rem; margin-bottom: 12px; }
+.alarm-modal-title {
+  font-size: 1.2rem; font-weight: 800; margin-bottom: 6px;
+  color: var(--accent);
+}
+.alarm-modal-sport {
+  font-size: 0.75rem; color: var(--text2); margin-bottom: 10px;
+}
+.alarm-modal-matchup {
+  font-size: 1.05rem; font-weight: 800; color: var(--text);
+  margin-bottom: 6px; display: none;
+}
+.alarm-modal-score {
+  font-size: 1.3rem; font-weight: 900; color: var(--accent);
+  margin-bottom: 8px; display: none;
+  letter-spacing: 0.02em;
+}
+.alarm-modal-period {
+  font-size: 0.78rem; color: var(--yellow); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 10px; display: none;
+}
+.alarm-modal-body {
+  font-size: 0.9rem; color: var(--text); line-height: 1.4;
+  margin-bottom: 14px;
+}
+.alarm-modal-channel {
+  display: none; font-size: 0.72rem; font-weight: 700;
+  color: var(--text2); padding: 4px 12px;
+  background: var(--bg3); border-radius: 12px;
+  margin: 0 auto 18px; width: fit-content;
+}
+.alarm-modal-body {
+  font-size: 0.9rem; color: var(--text); line-height: 1.4;
+  margin-bottom: 24px;
+}
+.alarm-modal-dismiss {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--accent), #7b61ff);
+  border: none; border-radius: 14px;
+  color: #000; font-size: 1rem; font-weight: 800;
+  cursor: pointer; letter-spacing: 0.06em; transition: opacity 0.2s;
+}
+.alarm-modal-dismiss:hover { opacity: 0.85; }
+.alarm-modal-dismiss:active { transform: scale(0.97); }
+
 </style>
 </head>
 <body>
 
 <!-- Alert Banner container -->
 <div id="alert-banner"></div>
+
+<!-- ==================== ALARM MODAL (push-triggered alarm popup) ==================== -->
+<div id="alarmModal">
+  <div class="alarm-modal-card">
+    <div class="alarm-modal-icon" id="alarmModalIcon">🔔</div>
+    <div class="alarm-modal-title" id="alarmModalTitle">Sports Alarm</div>
+    <div class="alarm-modal-sport" id="alarmModalSport"></div>
+    <div class="alarm-modal-matchup" id="alarmModalMatchup"></div>
+    <div class="alarm-modal-score" id="alarmModalScore"></div>
+    <div class="alarm-modal-period" id="alarmModalPeriod"></div>
+    <div class="alarm-modal-body" id="alarmModalBody"></div>
+    <div class="alarm-modal-channel" id="alarmModalChannel"></div>
+    <button class="alarm-modal-dismiss" onclick="dismissAlarmModal()">DISMISS</button>
+  </div>
+</div>
 
 <!-- ==================== PERIOD PICKER BOTTOM SHEET ==================== -->
 <div class="modal-overlay" id="periodModal" onclick="handleModalOverlayClick(event)">
@@ -875,10 +1018,6 @@ body {
   <div class="tab-panel" id="tab-settings">
     <div class="section-label">Notifications</div>
     <div class="setting-row">
-      <div><div class="setting-row-label">Browser Notifications</div><div class="setting-row-sub">Push alerts even when minimized</div></div>
-      <label class="toggle"><input type="checkbox" id="settingNotif" onchange="toggleNotifSetting()"><span class="toggle-slider"></span></label>
-    </div>
-    <div class="setting-row">
       <div><div class="setting-row-label">Sound Alerts</div><div class="setting-row-sub">Audio chime when alarm fires</div></div>
       <label class="toggle"><input type="checkbox" id="settingSound" checked onchange="saveSettings()"><span class="toggle-slider"></span></label>
     </div>
@@ -893,17 +1032,32 @@ body {
 
     <hr class="divider">
     <div class="section-label">Alarm Sound</div>
-    <div class="setting-row">
-      <div><div class="setting-row-label">Sound Style</div><div class="setting-row-sub">Choose chime type</div></div>
-      <select id="soundStyle" onchange="saveSettings()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:var(--radius-sm);font-size:0.82rem;">
-        <option value="chime">Chime</option>
-        <option value="buzz">Buzz</option>
-        <option value="horn">Air Horn</option>
-        <option value="beep">Beep</option>
-      </select>
+    <div class="sound-cards" id="soundCards">
+      <div class="sound-card" data-sound="urgent" onclick="selectSoundFile('urgent')">
+        <div class="sound-card-indicator"><div class="sound-card-indicator-inner"></div></div>
+        <div class="sound-card-info">
+          <div class="sound-card-name">Urgent</div>
+          <div class="sound-card-desc">Electronic siren, builds intensity. Best for close games.</div>
+        </div>
+        <button class="sound-preview-btn" onclick="event.stopPropagation(); previewSound('urgent')">▶ Preview</button>
+      </div>
+      <div class="sound-card" data-sound="pulse" onclick="selectSoundFile('pulse')">
+        <div class="sound-card-indicator"><div class="sound-card-indicator-inner"></div></div>
+        <div class="sound-card-info">
+          <div class="sound-card-name">Pulse</div>
+          <div class="sound-card-desc">Rhythmic stadium beat, 120 BPM. Steady driving rhythm.</div>
+        </div>
+        <button class="sound-preview-btn" onclick="event.stopPropagation(); previewSound('pulse')">▶ Preview</button>
+      </div>
+      <div class="sound-card" data-sound="crescendo" onclick="selectSoundFile('crescendo')">
+        <div class="sound-card-indicator"><div class="sound-card-indicator-inner"></div></div>
+        <div class="sound-card-info">
+          <div class="sound-card-name">Crescendo</div>
+          <div class="sound-card-desc">Orchestral dramatic build. For major moments.</div>
+        </div>
+        <button class="sound-preview-btn" onclick="event.stopPropagation(); previewSound('crescendo')">▶ Preview</button>
+      </div>
     </div>
-    <button onclick="playAlarmSound()" style="background:linear-gradient(135deg,var(--accent),#7b61ff);border:none;border-radius:var(--radius);color:#000;font-size:0.88rem;font-weight:800;cursor:pointer;width:100%;padding:12px;margin-top:4px;transition:opacity 0.2s;">▶ Test Sound</button>
-
     <hr class="divider">
     <div class="section-label">App Color</div>
     <div class="color-picker-wrap" id="accentPickerWrap">
@@ -1001,7 +1155,7 @@ let currentSport = 'NFL'; // legacy; prefer modalState.sport
 let alarms = JSON.parse(localStorage.getItem('sa_alarms') || '[]');
 let history = JSON.parse(localStorage.getItem('sa_history') || '[]');
 let settings = JSON.parse(localStorage.getItem('sa_settings') || JSON.stringify({
-  sound: true, banner: true, notif: false, volume: 70, soundStyle: 'chime'
+  sound: true, banner: true, volume: 70, soundFile: 'urgent'
 }));
 let deferredInstallPrompt = null;
 let toastTimeout = null;
@@ -1030,6 +1184,7 @@ const ALARM_TYPE_META = {
    ============================================================ */
 function init() {
   applySettings();
+  renderSoundCards();
   renderAlarmList();
   renderHistory();
   updateAlarmCount();
@@ -1056,12 +1211,9 @@ function init() {
     }
   });
 
-  // Fetch once on load to populate game data and determine polling window
+  // Fetch once on load to populate game data and start polling
   fetchAllGames(true);
-  // startGamesAutoRefresh() is now called by schedulePollingWindow() only during live game windows
-
-  // ── Adaptive alarm check interval: fast during live games, slow otherwise ──
-  startAlarmCheckInterval();
+  startGamesAutoRefresh();
 
   // ── SSE: real-time push for game_start / quarter_start events ──
   startSSEListener();
@@ -1070,6 +1222,67 @@ function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('service-worker.js').catch(() => {});
   }
+
+  // Service worker message listener removed — Android uses Capacitor FCM natively.
+
+  // Capacitor native FCM: auto-register for push on app launch
+  if (typeof Capacitor !== 'undefined' && Capacitor.isPluginAvailable('PushNotifications')) {
+    const PushNotifications = Capacitor.Plugins.PushNotifications;
+    PushNotifications.addListener('registration', (token) => {
+      console.log('[fcm] Push registration token:', token.value);
+      const channel = settings.soundFile || 'alarm_urgent';
+      _pushSyncIdentifier = { fcmToken: token.value };
+      fetch(API_BASE + '/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fcmToken: token.value, channel }),
+      }).then(r => r.json()).then(data => {
+        console.log('[fcm] Token registered with server:', data);
+        _fcmRegistrationDone = true;
+        syncAlarmGameIds();
+      }).catch(e => console.warn('[fcm] Register error:', e.message));
+    });
+    PushNotifications.addListener('registrationError', (err) => {
+      console.error('[fcm] Registration error:', err);
+    });
+    // Foreground FCM — play alarm sound IMMEDIATELY on receipt
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      console.log('[fcm] Push received (foreground):', notification.title, notification.body);
+      const data = notification.data || {};
+      const pushData = {
+        type: data.type || 'game_start',
+        sport: (data.sport || 'ALL').toUpperCase(),
+        game_id: data.game_id || '',
+        alarm_id: data.alarm_id || ''
+      };
+      const matched = pushMatchesAlarm(pushData);
+      if (matched) {
+        // Play alarm sound immediately — the native BackgroundAlarmService
+        // handles background/killed state; this covers foreground only.
+        playAlarmSound();
+        fireAlarm('push', notification.title || 'Sports Alarm', notification.body || '', matched.sport, null, matched);
+      }
+    });
+    // Tap action — fire the alarm UI but NO sound (already played by native service)
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      const n = action.notification;
+      console.log('[fcm] Push tapped:', n.title);
+      const data = n.data || {};
+      const pushData = {
+        type: data.type || 'game_start',
+        sport: (data.sport || 'ALL').toUpperCase(),
+        game_id: data.game_id || '',
+        alarm_id: data.alarm_id || ''
+      };
+      const matched = pushMatchesAlarm(pushData);
+      if (matched) {
+        fireAlarm('push', n.title || 'Sports Alarm', n.body || '', matched.sport, null, matched);
+      }
+    });
+    PushNotifications.register().catch(e => console.warn('[fcm] register() on init failed:', e.message));
+  }
+
+
 
   // Init favorites system
   updateFavPillVisibility();
@@ -1087,20 +1300,14 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
 
   if (name === 'games') {
-    // Always clear+restart to avoid duplicate intervals
-    stopGamesAutoRefresh();
     if (gamesLastFetch === 0) fetchAllGames(true);
     else { renderGames(); if (gamesLastUpdated) startLastUpdatedTicker(); }
     startGamesAutoRefresh();
   } else if (name === 'favorites') {
     renderFavoritesPicker();
     stopGamesAutoRefresh();
-    startGamesAutoRefresh();
-    stopLastUpdatedTicker();
   } else {
     stopGamesAutoRefresh();
-    startGamesAutoRefresh();
-    stopLastUpdatedTicker();
   }
 }
 
@@ -1173,34 +1380,118 @@ function simulateAlarmById(id) {
   const alarm = alarms.find(a => a.id === id);
   if (!alarm) return;
   const msgs = SIM_MESSAGES[alarm.type](alarm.sport, alarm);
-  fireAlarm(alarm.type, msgs[0], msgs[1], alarm.sport);
+  fireAlarm(alarm.type, msgs[0], msgs[1], alarm.sport, alarm.id, alarm);
 }
 
-function fireAlarm(type, title, message, sport, alarmId) {
-  const tmeta = ALARM_TYPE_META[type];
+/* ============================================================
+   ALARM MODAL — show/dismiss for push-triggered alarms
+   ============================================================ */
+function showAlarmModal(title, message, sport, game, alarm) {
+  const modal = document.getElementById('alarmModal');
+  if (!modal) return;
 
-  // 1. Sound
-  if (settings.sound) playAlarmSound();
+  const icon = document.getElementById('alarmModalIcon');
+  const titleEl = document.getElementById('alarmModalTitle');
+  const sportEl = document.getElementById('alarmModalSport');
+  const bodyEl = document.getElementById('alarmModalBody');
+  const matchupEl = document.getElementById('alarmModalMatchup');
+  const scoreEl = document.getElementById('alarmModalScore');
+  const periodEl = document.getElementById('alarmModalPeriod');
+  const channelEl = document.getElementById('alarmModalChannel');
 
-  // 2. Visual banner
-  if (settings.banner) showToast(tmeta.icon, title, message, tmeta.color);
+  const tmeta = ALARM_TYPE_META[alarm?.type];
+  const smeta = SPORT_META[sport];
+  const sportIcon = smeta?.icon || (tmeta?.icon) || '🔔';
 
-  // 3. Browser notification
-  if (settings.notif && Notification.permission === 'granted') {
-    new Notification(title, {
-      body: message,
-      icon: 'icons/icon-192.png',
-      badge: 'icons/icon-72.png',
-      tag: 'sports-alarm-' + type,
-      vibrate: [200, 100, 200]
-    });
+  if (icon) icon.textContent = sportIcon;
+  if (titleEl) titleEl.textContent = title;
+  if (sportEl) sportEl.textContent = sport || '';
+
+  // Matchup line
+  if (matchupEl) {
+    if (game) {
+      matchupEl.textContent = (game.awayName || game.away) + ' @ ' + (game.homeName || game.home);
+      matchupEl.style.display = 'block';
+    } else if (alarm?.team) {
+      matchupEl.textContent = alarm.team;
+      matchupEl.style.display = 'block';
+    } else {
+      matchupEl.style.display = 'none';
+    }
   }
 
-  // 4. Log to history
+  // Score line
+  if (scoreEl) {
+    if (game && game.homeScore != null && game.awayScore != null) {
+      scoreEl.textContent = (game.awayName ? (game.awayAbbr || game.awayName) : 'Away') + ' ' + game.awayScore + ' — ' + game.homeScore + ' ' + (game.homeName ? (game.homeAbbr || game.homeName) : 'Home');
+      scoreEl.style.display = 'block';
+    } else {
+      scoreEl.style.display = 'none';
+    }
+  }
+
+  // Period / status line
+  if (periodEl) {
+    if (game) {
+      const status = game.isLive ? ' LIVE' : (game.isFinal ? ' FINAL' : '');
+      const periodText = game.periodText || (game.clock ? game.clock : '');
+      periodEl.textContent = sport + status + (periodText ? ' · ' + periodText : '');
+      periodEl.style.display = 'block';
+    } else if (alarm?.gameTime) {
+      periodEl.textContent = sport + ' · ' + alarm.gameTime;
+      periodEl.style.display = 'block';
+    } else {
+      periodEl.style.display = 'none';
+    }
+  }
+
+  // Alarm type / channel badge
+  if (channelEl) {
+    if (alarm?.type) {
+      const atype = ALARM_TYPE_META[alarm.type];
+      channelEl.textContent = (atype?.icon || '🔔') + ' ' + (atype?.label || alarm.type);
+      channelEl.style.display = 'block';
+    } else {
+      channelEl.style.display = 'none';
+    }
+  }
+
+  // Body message
+  if (bodyEl) bodyEl.textContent = message;
+
+  modal.classList.add('visible');
+}
+
+function dismissAlarmModal() {
+  const modal = document.getElementById('alarmModal');
+  if (modal) modal.classList.remove('visible');
+  // Stop alarm sound
+  dismissAlarmSound();
+}
+
+function fireAlarm(type, title, message, sport, alarmId, alarm, game) {
+  const tmeta = ALARM_TYPE_META[type];
+
+  // Show modal for ALL alarm sources (push, polling, timer, SSE)
+  const modalData = alarm || (type === 'push' ? null : null);
+  showAlarmModal(title, message, sport, game, modalData);
+
+  // For push-triggered alarms, ALWAYS play sound regardless of settings
+  if (settings.sound || type === 'push') playAlarmSound();
+
+  // 2. Visual banner
+  if (settings.banner || type === 'push') showToast(tmeta?.icon || '🔔', title, message, tmeta?.color || '');
+
+  // 3. Log to history
   addToHistory(type, title, message, sport);
 
   // 5. Remove the alarm that fired (if we know which one it is)
-  if (alarmId) {
+  if (alarm) {
+    alarms = alarms.filter(a => a.id !== alarm.id);
+    saveAlarms();
+    renderAlarmList();
+    updateAlarmCount();
+  } else if (alarmId) {
     alarms = alarms.filter(a => a.id !== alarmId);
     saveAlarms();
     renderAlarmList();
@@ -1209,89 +1500,149 @@ function fireAlarm(type, title, message, sport, alarmId) {
 }
 
 /* ============================================================
-   AUDIO ENGINE (Web Audio API — no files needed)
+   AUDIO ENGINE — custom alarm MP3 files
    ============================================================ */
-let audioCtx = null;
+const SOUND_FILES = {
+  urgent:    '/alarm-sounds/alarm_urgent.mp3',
+  pulse:     '/alarm-sounds/alarm_pulse.mp3',
+  crescendo: '/alarm-sounds/alarm_crescendo.mp3'
+};
 
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return audioCtx;
-}
+let currentPreviewAudio = null;    // preview sound audio element
+let activeAlarmSound = null;       // currently-playing alarm sound (dismissible)
+let activeAlarmBannerVisible = false;
 
 function playAlarmSound() {
   try {
-    const ctx = getAudioCtx();
     const vol = (settings.volume || 70) / 100;
-    const style = settings.soundStyle || 'chime';
+    const soundFile = settings.soundFile || 'urgent';
+    const src = SOUND_FILES[soundFile] || SOUND_FILES.urgent;
 
-    if (style === 'chime') {
-      playChime(ctx, vol);
-    } else if (style === 'buzz') {
-      playBuzz(ctx, vol);
-    } else if (style === 'horn') {
-      playHorn(ctx, vol);
-    } else {
-      playBeep(ctx, vol);
+    // Stop any preview currently playing
+    if (currentPreviewAudio) {
+      currentPreviewAudio.pause();
+      currentPreviewAudio = null;
     }
-  } catch(e) {}
+
+    const audio = new Audio(src);
+    audio.volume = Math.min(vol * 2, 1);
+    audio.loop = true;
+    audio.play().catch(e => console.warn('Alarm playback failed:', e));
+    activeAlarmSound = audio;
+
+    // Show persistent dismiss banner
+    showActiveAlarmBanner(soundFile);
+  } catch(e) {
+    console.warn('Alarm sound error:', e);
+  }
 }
 
-function playChime(ctx, vol) {
-  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
-  notes.forEach((freq, i) => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    const t = ctx.currentTime + i * 0.12;
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol * 0.4, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-    osc.start(t); osc.stop(t + 0.5);
-  });
+function previewSound(fileKey) {
+  try {
+    // If same sound is already playing, stop it (toggle)
+    if (currentPreviewAudio && currentPreviewAudio.dataset.soundKey === fileKey) {
+      currentPreviewAudio.pause();
+      currentPreviewAudio = null;
+      updatePreviewBtnState(fileKey, false);
+      return;
+    }
+
+    // Stop any other preview
+    if (currentPreviewAudio) {
+      const oldKey = currentPreviewAudio.dataset.soundKey;
+      currentPreviewAudio.pause();
+      currentPreviewAudio = null;
+      if (oldKey) updatePreviewBtnState(oldKey, false);
+    }
+
+    const src = SOUND_FILES[fileKey] || SOUND_FILES.urgent;
+    const audio = new Audio(src);
+    audio.dataset.soundKey = fileKey;
+    audio.volume = Math.min(((settings.volume || 70) / 100) * 2, 1);
+    currentPreviewAudio = audio;
+    audio.play().catch(e => console.warn('Preview playback failed:', e));
+    updatePreviewBtnState(fileKey, true);
+    audio.addEventListener('ended', () => {
+      currentPreviewAudio = null;
+      updatePreviewBtnState(fileKey, false);
+    });
+  } catch(e) {
+    console.warn('Preview sound error:', e);
+  }
 }
 
-function playBeep(ctx, vol) {
-  [0, 0.18].forEach(delay => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'square';
-    osc.frequency.value = 880;
-    const t = ctx.currentTime + delay;
-    gain.gain.setValueAtTime(vol * 0.15, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-    osc.start(t); osc.stop(t + 0.2);
-  });
+/* Update preview button visual state */
+function updatePreviewBtnState(fileKey, isPlaying) {
+  const btn = document.querySelector(`.sound-preview-btn[data-sound="${fileKey}"]`);
+  if (!btn) return;
+  btn.classList.toggle('playing', isPlaying);
+  btn.innerHTML = isPlaying ? '&#x23F8;' : '&#x25B6;'; // stop icon or play icon
 }
 
-function playBuzz(ctx, vol) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.connect(gain); gain.connect(ctx.destination);
-  osc.type = 'sawtooth';
-  osc.frequency.value = 120;
-  const t = ctx.currentTime;
-  gain.gain.setValueAtTime(vol * 0.3, t);
-  gain.gain.linearRampToValueAtTime(0.001, t + 0.5);
-  osc.start(t); osc.stop(t + 0.55);
+/* Dismiss the active alarm sound (called from banner) */
+function dismissAlarmSound() {
+  if (activeAlarmSound) {
+    activeAlarmSound.pause();
+    activeAlarmSound = null;
+  }
+  hideActiveAlarmBanner();
 }
 
-function playHorn(ctx, vol) {
-  const freqs = [220, 277, 330];
-  freqs.forEach(freq => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type = 'sawtooth';
-    osc.frequency.value = freq;
-    const t = ctx.currentTime;
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(vol * 0.15, t + 0.05);
-    gain.gain.setValueAtTime(vol * 0.15, t + 0.3);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-    osc.start(t); osc.stop(t + 0.75);
+/* Show persistent in-app banner when alarm is firing */
+function showActiveAlarmBanner(soundFile) {
+  if (activeAlarmBannerVisible) return;
+  activeAlarmBannerVisible = true;
+
+  let banner = document.getElementById('active-alarm-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'active-alarm-banner';
+    banner.className = 'active-alarm-banner';
+    const alertBanner = document.getElementById('alert-banner');
+    if (alertBanner) alertBanner.parentNode.insertBefore(banner, alertBanner);
+    else document.querySelector('.tab-panels').prepend(banner);
+  }
+
+  const soundName = { urgent: 'Urgent', pulse: 'Pulse', crescendo: 'Crescendo' }[soundFile] || soundFile;
+  banner.innerHTML = `
+    <div class="active-alarm-inner">
+      <span class="active-alarm-icon">🔔</span>
+      <span class="active-alarm-text">Alarm firing: <strong>${soundName}</strong></span>
+      <button class="active-alarm-dismiss" onclick="dismissAlarmSound()">
+        Mute &amp; Dismiss
+      </button>
+    </div>
+  `;
+  banner.style.display = 'block';
+}
+
+/* Hide the active alarm banner */
+function hideActiveAlarmBanner() {
+  activeAlarmBannerVisible = false;
+  const banner = document.getElementById('active-alarm-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+function selectSoundFile(fileKey) {
+  settings.soundFile = fileKey;
+  saveSettings();
+  renderSoundCards();
+  // Sync with Android native notification channel preference
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      window.Capacitor.Plugins.Storage.set({ key: 'alarm_sound_channel', value: fileKey });
+      // Re-register FCM token with updated channel so server sends correct notification sound
+      if (_fcmRegistrationDone) {
+        registerFcmToken();
+      }
+    }
+  } catch(e) { /* ignore on web */ }
+}
+
+function renderSoundCards() {
+  const current = settings.soundFile || 'urgent';
+  document.querySelectorAll('.sound-card').forEach(card => {
+    card.classList.toggle('selected', card.dataset.sound === current);
   });
 }
 
@@ -1325,6 +1676,39 @@ function showToast(icon, title, message, color = 'var(--accent)') {
     toast.style.transform = 'translateY(-10px)';
     setTimeout(() => toast.remove(), 400);
   }, 4000);
+}
+
+/* Toast with a call-to-action button (for notification permission reminder) */
+function showToastNotification(message, ctaCallback) {
+  const banner = document.getElementById('alert-banner');
+
+  // Remove old toast
+  const existing = banner.querySelector('.alert-toast');
+  if (existing) existing.remove();
+  if (toastTimeout) clearTimeout(toastTimeout);
+
+  const toast = document.createElement('div');
+  toast.className = 'alert-toast';
+  toast.innerHTML = `
+    <div class="toast-icon">🔔</div>
+    <div class="toast-body">
+      <div class="toast-msg">${message}</div>
+    </div>
+    <button class="toast-close" id="notifCtaBtn" style="background:var(--accent);color:#000;border:none;padding:6px 14px;border-radius:20px;font-size:0.78rem;font-weight:700;cursor:pointer">Enable</button>
+    <button class="toast-close" onclick="this.parentElement.remove()" style="margin-left:4px">✕</button>`;
+  banner.appendChild(toast);
+
+  document.getElementById('notifCtaBtn').onclick = () => {
+    toast.remove();
+    ctaCallback();
+  };
+
+  toastTimeout = setTimeout(() => {
+    toast.style.transition = 'opacity 0.4s, transform 0.4s';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px)';
+    setTimeout(() => toast.remove(), 400);
+  }, 8000);
 }
 
 /* ============================================================
@@ -1380,22 +1764,120 @@ function clearHistory() {
    NOTIFICATIONS
    ============================================================ */
 function checkNotifPermission() {
-  if (!('Notification' in window)) return;
   const btn = document.getElementById('notifBtn');
-  const settingToggle = document.getElementById('settingNotif');
+
+  // Capacitor native — check PushNotifications plugin
+  if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+    const Push = Capacitor.Plugins.PushNotifications;
+    if (Push) {
+      Push.checkPermissions().then(status => {
+        if (status.receive === 'granted') {
+          btn.textContent = '🔔 On';
+          btn.classList.add('granted');
+        } else {
+          btn.textContent = '🔔 Enable';
+          btn.classList.remove('granted');
+        }
+      }).catch(() => {
+        btn.textContent = '🔔 Enable';
+        btn.classList.remove('granted');
+      });
+    } else {
+      // PushNotifications plugin not available at all
+      btn.textContent = '🔔 N/A';
+      btn.style.opacity = '0.5';
+    }
+    return;
+  }
+
+  // Web fallback
+  if (!('Notification' in window)) return;
   if (Notification.permission === 'granted') {
     btn.textContent = '🔔 On';
     btn.classList.add('granted');
-    settingToggle.checked = true;
-    settings.notif = true;
   } else {
     btn.textContent = '🔔 Enable';
     btn.classList.remove('granted');
-    settingToggle.checked = false;
   }
 }
 
+/* ── FCM token registration helper (Capacitor native only) ── */
+async function registerFcmToken() {
+  try {
+    if (typeof Capacitor === 'undefined' || !Capacitor.isNativePlatform || !Capacitor.isNativePlatform()) return;
+    const PushNotifications = Capacitor.Plugins.PushNotifications;
+    if (!PushNotifications) return;
+
+    const { value } = await PushNotifications.register();
+    console.log('[fcm] Got FCM token:', value);
+
+    const channel = settings.soundFile || 'alarm_urgent';
+    const resp = await fetch(API_BASE + '/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fcmToken: value, channel }),
+    });
+    const data = await resp.json();
+    console.log('[fcm] Registration result:', data);
+  } catch (e) {
+    console.warn('[fcm] Token registration failed:', e.message);
+  }
+}
+
+let _fcmRegistrationDone = false;
+let _syncAlarmsTimeout = null;
+let _pushSyncIdentifier = null; // { fcmToken: '...' } or { endpoint: '...' }
+
+/* Collect unique gameIds from enabled alarms and POST to /api/sync-alarms */
+function syncAlarmGameIds() {
+  if (!_pushSyncIdentifier) return;
+  const gameIds = [...new Set(alarms
+    .filter(a => a.enabled && a.gameId)
+    .map(a => String(a.gameId)))];
+  const url = API_BASE + '/api/sync-alarms';
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ..._pushSyncIdentifier, gameIds })
+  }).catch(e => console.warn('[sync-alarms] Failed:', e.message));
+}
+
+/* Convert base64url VAPID key to Uint8Array for pushManager.subscribe */
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
 async function requestNotifPermission() {
+  // Capacitor native — use PushNotifications plugin
+  if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform && Capacitor.isNativePlatform()) {
+    try {
+      const Push = Capacitor.Plugins.PushNotifications;
+      if (!Push) {
+        showToast('⚠️', 'Push Notifications Unavailable', 'The PushNotifications plugin is not installed in your native build.', 'var(--yellow)');
+        return;
+      }
+      const status = await Push.requestPermissions();
+      if (status.receive === 'granted') {
+        // Register FCM token with server
+        if (!_fcmRegistrationDone) {
+          Push.register().catch(e => console.warn('[fcm] register() failed:', e.message));
+          _fcmRegistrationDone = true;
+        }
+        showToast('🔔', 'Notifications Enabled', 'You will receive push alerts for your alarms.', 'var(--green)');
+      } else {
+        showToast('⚠️', 'Permission Denied', 'Enable notifications in Settings to receive alerts.', 'var(--yellow)');
+      }
+    } catch (e) {
+      console.warn('[notif] Push permission request error:', e.message);
+      showToast('⚠️', 'Notifications Error', e.message, 'var(--yellow)');
+    }
+    return;
+  }
+
+  // Web fallback
   if (!('Notification' in window)) {
     alert('Notifications not supported in this browser.');
     return;
@@ -1403,16 +1885,29 @@ async function requestNotifPermission() {
   const result = await Notification.requestPermission();
   checkNotifPermission();
   if (result === 'granted') {
-    settings.notif = true;
-    saveSettings();
+    // Subscribe to web push so alarm sync works for browser clients
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const vapidResp = await fetch(API_BASE + '/api/vapid-public-key');
+      const { publicKey } = await vapidResp.json();
+      const applicationServerKey = urlBase64ToUint8Array(publicKey);
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey,
+      });
+      await fetch(API_BASE + '/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sub),
+      });
+      _pushSyncIdentifier = { endpoint: sub.endpoint };
+      syncAlarmGameIds();
+      console.log('[web-push] Subscribed and alarm sync started');
+    } catch (e) {
+      console.warn('[web-push] Subscribe failed:', e.message);
+    }
     showToast('🔔', 'Notifications Enabled', 'You will receive push alerts for your alarms.', 'var(--green)');
   }
-}
-
-function toggleNotifSetting() {
-  const on = document.getElementById('settingNotif').checked;
-  if (on) requestNotifPermission();
-  else { settings.notif = false; saveSettings(); }
 }
 
 /* ============================================================
@@ -1421,16 +1916,14 @@ function toggleNotifSetting() {
 function applySettings() {
   document.getElementById('settingSound').checked  = settings.sound;
   document.getElementById('settingBanner').checked = settings.banner;
-  document.getElementById('settingNotif').checked  = settings.notif;
   document.getElementById('volumeSlider').value    = settings.volume;
-  document.getElementById('soundStyle').value      = settings.soundStyle || 'chime';
+  renderSoundCards();
 }
 
 function saveSettings() {
-  settings.sound      = document.getElementById('settingSound').checked;
-  settings.banner     = document.getElementById('settingBanner').checked;
-  settings.volume     = parseInt(document.getElementById('volumeSlider').value);
-  settings.soundStyle = document.getElementById('soundStyle').value;
+  settings.sound  = document.getElementById('settingSound').checked;
+  settings.banner = document.getElementById('settingBanner').checked;
+  settings.volume = parseInt(document.getElementById('volumeSlider').value);
   localStorage.setItem('sa_settings', JSON.stringify(settings));
 }
 
@@ -1439,15 +1932,12 @@ function saveSettings() {
    ============================================================ */
 function saveAlarms() {
   localStorage.setItem('sa_alarms', JSON.stringify(alarms));
-  // Request notification permission on first alarm save (if not yet decided)
-  if (alarms.length > 0 && 'Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().then(result => {
-      checkNotifPermission();
-      if (result === 'granted') {
-        settings.notif = true;
-        localStorage.setItem('sa_settings', JSON.stringify(settings));
-      }
-    });
+  // Debounced sync of alarm gameIds to server
+  clearTimeout(_syncAlarmsTimeout);
+  _syncAlarmsTimeout = setTimeout(syncAlarmGameIds, 1200);
+  // Show toast reminder to enable push notifications when alarms exist
+  if (alarms.length > 0 && 'Notification' in window && Notification.permission !== 'granted') {
+    showToastNotification('Enable push notifications to get alerts', requestNotifPermission);
   }
 }
 function saveHistory() { localStorage.setItem('sa_history', JSON.stringify(history)); }
@@ -1500,15 +1990,28 @@ const SPORT_PLACEHOLDERS = {
   NCAAB: { icon: '🎓', label: 'CBB',  teams: ['Duke', 'Kansas', 'UNC', 'Kentucky'] }
 };
 
-/* ── Visibility-aware poll interval tracking ── */
-let _isPageVisible = (document.visibilityState === 'visible');
-document.addEventListener('visibilitychange', () => {
-  _isPageVisible = (document.visibilityState === 'visible');
-  if (gamesRefreshInterval !== null) {
-    stopGamesAutoRefresh();
-    startGamesAutoRefresh();
+/* ── Simple polling: 30-second refresh while the app is open.
+   When the app is closed, polling stops automatically — push notifications
+   from the server handle alerts for closed app. */
+let gamesRefreshInterval = null;
+let gamesLastFetch = 0;
+let gamesLastUpdated = 0;
+let lastUpdatedTimer = null;
+
+const GAMES_POLL_INTERVAL = 30000; // 30 seconds
+
+function startGamesAutoRefresh() {
+  stopGamesAutoRefresh();
+  gamesRefreshInterval = setInterval(() => fetchAllGames(false), GAMES_POLL_INTERVAL);
+}
+
+function stopGamesAutoRefresh() {
+  if (gamesRefreshInterval) {
+    clearInterval(gamesRefreshInterval);
+    gamesRefreshInterval = null;
   }
-});
+  stopLastUpdatedTicker();
+}
 
 const SPORT_ICONS = {
   NFL: '🏈', NBA: '🏀', MLB: '⚾', NHL: '🏒',
@@ -1520,14 +2023,6 @@ const SPORT_ICONS = {
 // All fetched games: { live: [], upcoming: [], final: [] }
 let gamesData = { live: [], upcoming: [], final: [] };
 let gamesSportFilter = 'ALL';
-let gamesRefreshInterval = null;
-let gamesLastFetch = 0;
-let gamesLastUpdated = 0;      // epoch ms of last successful fetch
-let lastUpdatedTimer = null;   // ticks the "X seconds ago" label
-
-function _hasLiveGames() {
-  return gamesData.live && gamesData.live.length > 0;
-}
 
 /* Normalise sport key from server (lowercase) to UI key (uppercase).
    Server writes sport as 'nba', 'nfl', 'soccer', etc. */
@@ -1562,9 +2057,6 @@ function enrichGame(g) {
    { updatedAt, live: [...], upcoming: [...], final: [...] }
    Games are already in the canonical shape — no client-side parsing needed. */
 async function fetchAllGames(manual = false) {
-  const _throttleMs = _hasLiveGames() ? 25000 : 240000;
-  if (!manual && Date.now() - gamesLastFetch < _throttleMs) return;
-
   const btn = document.getElementById('gamesRefreshBtn');
   if (btn) btn.classList.add('spinning');
 
@@ -1592,8 +2084,6 @@ async function fetchAllGames(manual = false) {
 
     renderGames();
     checkAlarmsAgainstGames();
-    adjustRefreshRate();
-    schedulePollingWindow();
   } catch (e) {
     console.warn('fetchAllGames failed:', e.message);
     showGamesPlaceholder();
@@ -1790,116 +2280,6 @@ function showGamesPlaceholder() {
 
 /* Legacy alias kept for any remaining references */
 function showGamesError() { showGamesPlaceholder(); }
-
-/* ── Smart polling intervals ──
-   Live games in progress → fast polling (30s foreground, 60s background)
-   No live games          → slow polling (5 min) to save bandwidth
-   After each fetch, call adjustRefreshRate() to re-evaluate. */
-const POLL_FAST_FG = 30000;   // 30s — foreground with live games
-const POLL_FAST_BG = 60000;   // 60s — background with live games
-const POLL_SLOW    = 300000;  // 5 min — no live games
-
-function _currentPollInterval() {
-  if (_hasLiveGames()) {
-    return _isPageVisible ? POLL_FAST_FG : POLL_FAST_BG;
-  }
-  return POLL_SLOW;
-}
-
-function startGamesAutoRefresh() {
-  stopGamesAutoRefresh();
-  const interval = _currentPollInterval();
-  gamesRefreshInterval = setInterval(() => fetchAllGames(false), interval);
-}
-
-/* Called after every successful fetch to switch between fast/slow polling */
-function adjustRefreshRate() {
-  if (gamesRefreshInterval !== null) {
-    stopGamesAutoRefresh();
-    startGamesAutoRefresh();
-  }
-  startAlarmCheckInterval();
-}
-
-/* ── Adaptive alarm-check interval ──
-   Mirrors the polling cadence: fast when live games exist, slow otherwise. */
-let _alarmCheckInterval = null;
-
-function startAlarmCheckInterval() {
-  stopAlarmCheckInterval();
-  const interval = _hasLiveGames() ? POLL_FAST_FG : POLL_SLOW;
-  _alarmCheckInterval = setInterval(() => {
-    if (alarms.length > 0 && gamesData.live.length > 0) {
-      checkAlarmsAgainstGames();
-    }
-  }, interval);
-}
-
-function stopAlarmCheckInterval() {
-  if (_alarmCheckInterval) {
-    clearInterval(_alarmCheckInterval);
-    _alarmCheckInterval = null;
-  }
-}
-
-/* ============================================================
-   SMART POLLING WINDOW — only poll during live game windows
-   ============================================================ */
-let _pollWindowStartTimer = null;
-let _pollWindowStopTimer  = null;
-
-function schedulePollingWindow() {
-  // Clear any existing window timers
-  if (_pollWindowStartTimer) { clearTimeout(_pollWindowStartTimer); _pollWindowStartTimer = null; }
-  if (_pollWindowStopTimer)  { clearTimeout(_pollWindowStopTimer);  _pollWindowStopTimer  = null; }
-
-  const now = Date.now();
-  const upcoming = gamesData.upcoming || [];
-  if (upcoming.length === 0) return; // nothing to schedule
-
-  // Find earliest start and latest expected end (start + 4 hours)
-  const startTimes = upcoming
-    .map(g => g.startTime ? new Date(g.startTime).getTime() : 0)
-    .filter(t => t > now);
-  if (startTimes.length === 0) return;
-
-  const earliestStart = Math.min(...startTimes);
-  const latestStart   = Math.max(...startTimes);
-  const windowEnd     = latestStart + (4 * 60 * 60 * 1000); // 4 hrs after last game starts
-
-  const msUntilStart = earliestStart - now;
-  const msUntilEnd   = windowEnd - now;
-
-  if (msUntilEnd <= 0) return; // all games already over
-
-  if (msUntilStart > 0) {
-    // No live games yet — schedule polling to start when first game begins
-    console.log('[poll-window] Polling will start in', Math.round(msUntilStart / 60000), 'min');
-    stopGamesAutoRefresh();
-    stopAlarmCheckInterval();
-    _pollWindowStartTimer = setTimeout(() => {
-      console.log('[poll-window] Game window opened — starting polling');
-      fetchAllGames(true);
-      startGamesAutoRefresh();
-      startAlarmCheckInterval();
-    }, msUntilStart);
-  }
-
-  // Schedule polling to STOP after the last game window closes
-  _pollWindowStopTimer = setTimeout(() => {
-    console.log('[poll-window] Game window closed — stopping polling');
-    stopGamesAutoRefresh();
-    stopAlarmCheckInterval();
-  }, msUntilEnd);
-}
-
-function stopGamesAutoRefresh() {
-  if (gamesRefreshInterval) {
-    clearInterval(gamesRefreshInterval);
-    gamesRefreshInterval = null;
-  }
-  stopLastUpdatedTicker();
-}
 
 /* Ticker — updates "last updated X sec ago" every second.
    Turns red when data is older than 2 minutes (stale). */
@@ -2471,6 +2851,7 @@ function addAlarmWithPeriods(type, extra = {}) {
     sport,
     sportIcon:   meta.icon,
     type,
+    ...(modalState.gameId ? { gameId: modalState.gameId } : {}),
     ...extra,
     createdAt:   Date.now(),
     enabled:     true
@@ -2552,9 +2933,10 @@ function renderAlarmList() {
 }
 
 function prefillAlarmFromGame(game) {
-  const sportMap = { MLS: 'MLS', NCAAF: 'NCAAF', NCAAB: 'NCAAB' };
+  const sportMap = { MLS: 'MLS', mls: 'MLS', soccer: 'MLS', Soccer: 'MLS', NCAAF: 'NCAAF', ncaaf: 'NCAAF', NCAAB: 'NCAAB', ncaab: 'NCAAB' };
   const targetSport = sportMap[game.sport] || game.sport;
   modalState.sport = targetSport;
+  modalState.gameId = game.id || null; // ESPN game ID for server sync
   currentSport = targetSport; // keep legacy var in sync
   openPeriodModal(targetSport, game);
 }
@@ -2576,6 +2958,7 @@ function escHtml(str) {
 function escAttr(str) {
   return String(str || '')
     .replace(/\\/g, '\\\\')
+    .replace(/'/g, '\\u0027')
     .replace(/"/g, '&quot;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -2591,6 +2974,31 @@ function escAttr(str) {
 // Key: alarmId + ':' + eventKey  →  true
 const firedAlarmEvents = {};
 const MAX_FIRED_EVENTS = 500;
+
+/* ============================================================
+   PUSH MATCHING — check if an incoming push matches any active alarm
+   Server push data: { type: 'game_start'|'quarter_start'|'game_final', sport, game_id, alarm_id, body }
+   ============================================================ */
+function pushMatchesAlarm(pushData) {
+  if (!alarms || alarms.length === 0) return null;
+  const pushType = pushData.type || '';
+  let pushSport = (pushData.sport || '').toUpperCase();
+  // Normalize ESPN sport labels to our known alarm keys
+  if (pushSport === 'SOCCER') pushSport = 'MLS';
+
+  for (const alarm of alarms) {
+    if (!alarm.enabled) continue;
+    if ((alarm.sport || '').toUpperCase() !== pushSport) continue;
+
+    // game_start on server → matches gamestart alarms
+    if (pushType === 'game_start' && alarm.type === 'gamestart') return alarm;
+    // quarter_start on server → matches period alarms
+    if (pushType === 'quarter_start' && alarm.type === 'period') return alarm;
+    // game_final on server → matches gamestart alarms (final alert)
+    if (pushType === 'game_final' && alarm.type === 'gamestart') return alarm;
+  }
+  return null;
+}
 
 function pruneFiredEvents() {
   const keys = Object.keys(firedAlarmEvents);
@@ -2657,7 +3065,7 @@ function checkAlarmForGame(alarm, game) {
           fireAlarm('gamestart',
             SPORT_META[alarm.sport].icon + ' Game Started!',
             game.awayName + ' vs ' + game.homeName + ' is now live.',
-            alarm.sport, alarm.id);
+            alarm.sport, alarm.id, alarm, game);
         }
       }
       if (game.isFinal) {
@@ -2669,7 +3077,7 @@ function checkAlarmForGame(alarm, game) {
           fireAlarm('gamestart',
             '🏁 Final Whistle!',
             game.awayName + ' ' + game.awayScore + ' — ' + game.homeScore + ' ' + game.homeName + '. ' + winner + ' wins!',
-            alarm.sport, alarm.id);
+            alarm.sport, alarm.id, alarm, game);
         }
       }
       break;
@@ -2697,7 +3105,7 @@ function checkAlarmForGame(alarm, game) {
         fireAlarm('period',
           '⏱️ ' + label + ' Starting!',
           (game.awayName + ' vs ' + game.homeName) + ' · ' + alarm.sport + ' · ' + label,
-          alarm.sport, alarm.id);
+          alarm.sport, alarm.id, alarm, game);
       }
       break;
     }
@@ -2719,7 +3127,7 @@ function checkAlarmForGame(alarm, game) {
             fireAlarm('score',
               '🎯 Score Alert!',
               name + ' has reached ' + score + ' points in ' + game.awayName + ' vs ' + game.homeName,
-              alarm.sport, alarm.id);
+              alarm.sport, alarm.id, alarm, game);
           }
         }
       });
@@ -2744,7 +3152,7 @@ function checkAlarmForGame(alarm, game) {
         fireAlarm('team',
           '📣 ' + teamName + ' Scores!',
           teamName + ' now has ' + teamScore + ' points in ' + game.awayName + ' vs ' + game.homeName,
-          alarm.sport, alarm.id);
+          alarm.sport, alarm.id, alarm, game);
       }
       break;
     }
@@ -2761,7 +3169,7 @@ function checkAlarmForGame(alarm, game) {
           fireAlarm('ot',
             '⚡ Overtime!',
             game.awayName + ' vs ' + game.homeName + ' is going to overtime!',
-            alarm.sport, alarm.id);
+            alarm.sport, alarm.id, alarm, game);
         }
       }
       break;
@@ -3096,7 +3504,7 @@ function scheduleGameStartAlarm(alarm) {
     fireAlarm('gamestart',
       (SPORT_META[sport]?.icon || '🏆') + ' Game Starting!',
       (alarm.team || sport) + ' is about to begin. Get ready!',
-      sport, alarm.id);
+      sport, alarm.id, alarm);
   }, msUntilStart);
 }
 
